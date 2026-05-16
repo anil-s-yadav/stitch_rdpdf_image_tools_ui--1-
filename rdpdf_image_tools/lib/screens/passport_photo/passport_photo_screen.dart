@@ -6,7 +6,6 @@ import '../../models/photo_preset.dart';
 import '../../services/image_processing_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/app_bars.dart';
 import '../../widgets/common_widgets.dart';
 
 /// Passport Photo Maker screen matching the auto_standard_mode design.
@@ -78,167 +77,170 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
     final selected = presets[_selectedPresetIndex];
 
     return Scaffold(
-      appBar: const GradientAppBar(showBackButton: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppTheme.containerMargin),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──────────────────────────────────────────
-            Text(
-              'Auto KB + Dimension\nMode',
-              style: Theme.of(
-                context,
-              ).textTheme.displayLarge?.copyWith(color: AppColors.onSurface),
-            ),
-            const SizedBox(height: AppTheme.spaceXs),
-            Text(
-              'One-click optimization for standard document requirements.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceLg),
-
-            // ── Select Standard ─────────────────────────────────
-            Text(
-              'Select Standard',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(color: AppColors.onSurface),
-            ),
-            const SizedBox(height: AppTheme.spaceMd),
-
-            // Preset Cards
-            ...List.generate(presets.length, (index) {
-              final preset = presets[index];
-              final isSelected = index == _selectedPresetIndex;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
-                child: _PresetCard(
-                  preset: preset,
-                  isSelected: isSelected,
-                  onTap: () => setState(() => _selectedPresetIndex = index),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppTheme.containerMargin),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header ──────────────────────────────────────────
+              Text(
+                'Auto KB + Dimension\nMode',
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
-              );
-            }),
+              ),
+              const SizedBox(height: AppTheme.spaceXs),
+              Text(
+                'One-click optimization for standard document requirements.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceLg),
 
-            const SizedBox(height: AppTheme.spaceLg),
+              // ── Select Standard ─────────────────────────────────
+              Text(
+                'Select Standard',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
 
-            // ── Upload Area ─────────────────────────────────────
-            UploadArea(
-              onTap: _pickImage,
-              icon: Icons.cloud_upload_rounded,
-              title: 'Drag & Drop Image',
-              subtitle: 'or click to browse files',
-              hasFile: _selectedImage != null,
-              preview: _selectedImage != null
-                  ? Stack(
+              // Preset Cards
+              ...List.generate(presets.length, (index) {
+                final preset = presets[index];
+                final isSelected = index == _selectedPresetIndex;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
+                  child: _PresetCard(
+                    preset: preset,
+                    isSelected: isSelected,
+                    onTap: () => setState(() => _selectedPresetIndex = index),
+                  ),
+                );
+              }),
+
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Upload Area ─────────────────────────────────────
+              UploadArea(
+                onTap: _pickImage,
+                icon: Icons.cloud_upload_rounded,
+                title: 'Drag & Drop Image',
+                subtitle: 'or click to browse files',
+                hasFile: _selectedImage != null,
+                preview: _selectedImage != null
+                    ? Stack(
+                        children: [
+                          Center(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusMd,
+                              ),
+                              child: Image.file(
+                                _selectedImage!,
+                                width: 300,
+                                height: 300,
+
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setState(() => _selectedImage = null),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : null,
+              ),
+
+              if (_selectedImage == null) ...[
+                const SizedBox(height: AppTheme.spaceMd),
+                Center(
+                  child: OutlinedButton(
+                    onPressed: _pickImage,
+                    child: const Text('Browse Files'),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Automated Settings ──────────────────────────────
+              PremiumCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Center(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusMd,
-                            ),
-                            child: Image.file(
-                              _selectedImage!,
-                              width: 300,
-                              height: 300,
-
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                        Icon(
+                          Icons.auto_awesome,
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          size: 20,
                         ),
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: GestureDetector(
-                            onTap: () => setState(() => _selectedImage = null),
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Automated Settings',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ],
-                    )
-                  : null,
-            ),
-
-            if (_selectedImage == null) ...[
-              const SizedBox(height: AppTheme.spaceMd),
-              Center(
-                child: OutlinedButton(
-                  onPressed: _pickImage,
-                  child: const Text('Browse Files'),
+                    ),
+                    const SizedBox(height: AppTheme.spaceMd),
+                    _SettingRow(
+                      icon: Icons.photo_size_select_large_rounded,
+                      label: 'Target File Size',
+                      value: selected.targetText,
+                    ),
+                    const SizedBox(height: AppTheme.spaceSm),
+                    _SettingRow(
+                      icon: Icons.crop_rounded,
+                      label: 'Crop Dimensions',
+                      value:
+                          '${selected.widthMm / 10} × ${selected.heightMm / 10} cm',
+                    ),
+                    const SizedBox(height: AppTheme.spaceSm),
+                    _SettingRow(
+                      icon: Icons.image_rounded,
+                      label: 'Output Format',
+                      value: 'JPEG',
+                    ),
+                  ],
                 ),
               ),
-            ],
 
-            const SizedBox(height: AppTheme.spaceLg),
+              const SizedBox(height: AppTheme.spaceLg),
 
-            // ── Automated Settings ──────────────────────────────
-            PremiumCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.auto_awesome,
-                        color: AppColors.primaryContainer,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Automated Settings',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spaceMd),
-                  _SettingRow(
-                    icon: Icons.photo_size_select_large_rounded,
-                    label: 'Target File Size',
-                    value: selected.targetText,
-                  ),
-                  const SizedBox(height: AppTheme.spaceSm),
-                  _SettingRow(
-                    icon: Icons.crop_rounded,
-                    label: 'Crop Dimensions',
-                    value:
-                        '${selected.widthMm / 10} × ${selected.heightMm / 10} cm',
-                  ),
-                  const SizedBox(height: AppTheme.spaceSm),
-                  _SettingRow(
-                    icon: Icons.image_rounded,
-                    label: 'Output Format',
-                    value: 'JPEG',
-                  ),
-                ],
+              // ── Process Button ──────────────────────────────────
+              PrimaryActionButton(
+                label: 'Process Image',
+                icon: Icons.auto_awesome,
+                onPressed: _processImage,
+                isLoading: _isProcessing,
               ),
-            ),
-
-            const SizedBox(height: AppTheme.spaceLg),
-
-            // ── Process Button ──────────────────────────────────
-            PrimaryActionButton(
-              label: 'Process Image',
-              icon: Icons.auto_awesome,
-              onPressed: _processImage,
-              isLoading: _isProcessing,
-            ),
-            const SizedBox(height: AppTheme.spaceXl),
-          ],
+              const SizedBox(height: AppTheme.spaceXl),
+            ],
+          ),
         ),
       ),
     );
@@ -280,18 +282,20 @@ class _PresetCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(AppTheme.spaceMd),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
           border: Border.all(
             color: isSelected
-                ? AppColors.primaryContainer
-                : AppColors.outlineVariant.withOpacity(0.3),
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primaryContainer.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withOpacity(0.1),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -303,8 +307,8 @@ class _PresetCard extends StatelessWidget {
             Icon(
               _presetIcon,
               color: isSelected
-                  ? AppColors.primaryContainer
-                  : AppColors.onSurfaceVariant,
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
               size: 28,
             ),
             const SizedBox(width: AppTheme.spaceMd),
@@ -319,18 +323,18 @@ class _PresetCard extends StatelessWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: isSelected
-                          ? AppColors.primaryContainer
-                          : AppColors.onSurface,
+                          ? Theme.of(context).colorScheme.primaryContainer
+                          : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     preset.description,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 13,
                       fontWeight: FontWeight.w300,
-                      color: AppColors.onSurfaceVariant,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -340,11 +344,15 @@ class _PresetCard extends StatelessWidget {
               Container(
                 width: 24,
                 height: 24,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryContainer,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check, color: Colors.white, size: 16),
+                child: Icon(
+                  Icons.check,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  size: 16,
+                ),
               ),
           ],
         ),
@@ -370,37 +378,41 @@ class _SettingRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppTheme.radiusDefault),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppColors.onSurfaceVariant),
+          Icon(
+            icon,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primaryFixed.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.primaryContainer,
+                color: Theme.of(context).colorScheme.primaryContainer,
               ),
             ),
           ),

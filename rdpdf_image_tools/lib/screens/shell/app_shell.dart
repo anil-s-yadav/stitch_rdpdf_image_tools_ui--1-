@@ -39,7 +39,8 @@ class AppShell extends StatelessWidget {
           color: Theme.of(context).colorScheme.surface,
           border: Border(
             top: BorderSide(
-              color: Theme.of(context).dividerColor,
+              width: 2,
+              color: Theme.of(context).dividerColor.withAlpha(20),
             ),
           ),
           boxShadow: [
@@ -106,7 +107,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: isActive
-              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.08)
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -117,8 +118,10 @@ class _NavItem extends StatelessWidget {
               icon,
               size: 24,
               color: isActive
-                  ? Theme.of(context).colorScheme.primaryContainer
-                  : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withOpacity(0.6),
             ),
             const SizedBox(height: 2),
             Text(
@@ -127,8 +130,10 @@ class _NavItem extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
                 color: isActive
-                    ? Theme.of(context).colorScheme.primaryContainer
-                    : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
             ),
           ],

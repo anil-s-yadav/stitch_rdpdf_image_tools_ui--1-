@@ -78,11 +78,11 @@ class AppColors {
   static const Color successLight = Color(0xFFDCFCE7);
 
   // ── Dark Mode overrides ──────────────────────────────────────────────
-  static const Color darkSurface = Color(0xFF111827);
-  static const Color darkSurfaceContainer = Color(0xFF1F2937);
-  static const Color darkSurfaceContainerHigh = Color(0xFF374151);
-  static const Color darkOnSurface = Color(0xFFE5E7EB);
-  static const Color darkOnSurfaceVariant = Color(0xFF9CA3AF);
-  static const Color darkOutline = Color(0xFF6B7280);
-  static const Color darkBackground = Color(0xFF0F172A);
+  static const Color darkSurface = Color(0xFF1E1E1E);
+  static const Color darkSurfaceContainer = Color(0xFF2C2C2C);
+  static const Color darkSurfaceContainerHigh = Color(0xFF383838);
+  static const Color darkOnSurface = Color(0xFFE3E3E3);
+  static const Color darkOnSurfaceVariant = Color(0xFFAAAAAA);
+  static const Color darkOutline = Color(0xFF757575);
+  static const Color darkBackground = Color(0xFF121212);
 }

@@ -9,7 +9,6 @@ import 'package:path/path.dart' as p;
 import '../../services/image_processing_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/app_bars.dart';
 import '../../widgets/common_widgets.dart';
 
 /// Combine Photo & Signature screen matching pro_combine_tool_v2 design.
@@ -40,8 +39,7 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
   Future<void> _generateCombined() async {
     if (_photo == null || _signature == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Please upload both photo and signature')),
+        const SnackBar(content: Text('Please upload both photo and signature')),
       );
       return;
     }
@@ -89,16 +87,16 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
       );
       canvas.drawImageRect(
         sigImg,
-        Rect.fromLTWH(
-            0, 0, sigImg.width.toDouble(), sigImg.height.toDouble()),
+        Rect.fromLTWH(0, 0, sigImg.width.toDouble(), sigImg.height.toDouble()),
         sigRect,
         Paint(),
       );
 
       final picture = recorder.endRecording();
       final combinedImg = await picture.toImage(canvasWidth, canvasHeight);
-      final byteData =
-          await combinedImg.toByteData(format: ui.ImageByteFormat.png);
+      final byteData = await combinedImg.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
 
       if (byteData != null) {
         final dir = await getTemporaryDirectory();
@@ -113,20 +111,23 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
           final fileSize = ImageProcessingService.formatFileSize(
             await outFile.length(),
           );
-          context.push('/result', extra: {
-            'filePath': outFile.path,
-            'fileSize': fileSize,
-            'dimensions': '${canvasWidth} × $canvasHeight px',
-            'format': 'PNG',
-            'toolName': 'Combine Photo + Signature',
-          });
+          context.push(
+            '/result',
+            extra: {
+              'filePath': outFile.path,
+              'fileSize': fileSize,
+              'dimensions': '${canvasWidth} × $canvasHeight px',
+              'format': 'PNG',
+              'toolName': 'Combine Photo + Signature',
+            },
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
 
@@ -136,209 +137,244 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const GradientAppBar(showBackButton: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppTheme.containerMargin),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──────────────────────────────────────────
-            Text(
-              'Combine Photo & Signature',
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    fontSize: 28,
-                  ),
-            ),
-            const SizedBox(height: AppTheme.spaceSm),
-            // Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: AppColors.primaryFixed.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(8),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppTheme.containerMargin),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header ──────────────────────────────────────────
+              Text(
+                'Combine Photo & Signature',
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  fontSize: 28,
+                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.workspace_premium,
-                      size: 14, color: Theme.of(context).colorScheme.primaryContainer),
-                  const SizedBox(width: 4),
-                  Text(
-                    'REQUIRED FOR MANY GOVT FORMS',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
+              const SizedBox(height: AppTheme.spaceSm),
+              // Badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.workspace_premium,
+                      size: 14,
                       color: Theme.of(context).colorScheme.primaryContainer,
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceSm),
-            Text(
-              'Upload your portrait photo and handwritten signature to generate a single standardized document.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: AppTheme.spaceLg),
-
-            // ── 1. Portrait Photo ───────────────────────────────
-            _UploadSection(
-              number: '1',
-              title: 'Portrait Photo',
-              badge: 'JPG, PNG, WEBP',
-              file: _photo,
-              onTap: _pickPhoto,
-              onClear: () => setState(() => _photo = null),
-              icon: Icons.camera_alt_rounded,
-              uploadTitle: 'Click to upload photo',
-            ),
-            const SizedBox(height: AppTheme.spaceMd),
-
-            // ── 2. Signature ────────────────────────────────────
-            _UploadSection(
-              number: '2',
-              title: 'Signature',
-              badge: 'Transparent PNG\npreferred',
-              file: _signature,
-              onTap: _pickSignature,
-              onClear: () => setState(() => _signature = null),
-              icon: Icons.draw_rounded,
-              uploadTitle: 'Click to upload signature',
-            ),
-            const SizedBox(height: AppTheme.spaceLg),
-
-            // ── Live Preview ────────────────────────────────────
-            PremiumCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.preview_rounded,
-                          size: 18, color: Theme.of(context).colorScheme.onSurface),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Live Preview',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'REQUIRED FOR MANY GOVT FORMS',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                        color: Theme.of(context).colorScheme.primaryContainer,
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryFixed.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'Standardized layout',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: Theme.of(context).colorScheme.primaryContainer,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spaceMd),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AppTheme.spaceLg),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     ),
-                    child: Column(
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceSm),
+              Text(
+                'Upload your portrait photo and handwritten signature to generate a single standardized document.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── 1. Portrait Photo ───────────────────────────────
+              _UploadSection(
+                number: '1',
+                title: 'Portrait Photo',
+                badge: 'JPG, PNG, WEBP',
+                file: _photo,
+                onTap: _pickPhoto,
+                onClear: () => setState(() => _photo = null),
+                icon: Icons.camera_alt_rounded,
+                uploadTitle: 'Click to upload photo',
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
+
+              // ── 2. Signature ────────────────────────────────────
+              _UploadSection(
+                number: '2',
+                title: 'Signature',
+                badge: 'Transparent PNG\npreferred',
+                file: _signature,
+                onTap: _pickSignature,
+                onClear: () => setState(() => _signature = null),
+                icon: Icons.draw_rounded,
+                uploadTitle: 'Click to upload signature',
+              ),
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Live Preview ────────────────────────────────────
+              PremiumCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        // Photo area
-                        Container(
-                          width: 140,
-                          height: 180,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                                color: AppColors.outlineVariant.withOpacity(0.3)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: _photo != null
-                              ? Image.file(_photo!, fit: BoxFit.cover)
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.person_rounded,
-                                        size: 40,
-                                        color: AppColors.outlineVariant),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Photo Area',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 11,
-                                        color: AppColors.outline,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                        Icon(
+                          Icons.preview_rounded,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
-                        const SizedBox(height: 12),
-                        // Signature area
+                        const SizedBox(width: 6),
+                        Text(
+                          'Live Preview',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(width: 8),
                         Container(
-                          width: 120,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                                color: AppColors.outlineVariant.withOpacity(0.3)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
                           ),
-                          clipBehavior: Clip.antiAlias,
-                          child: _signature != null
-                              ? Image.file(_signature!, fit: BoxFit.contain)
-                              : Center(
-                                  child: Text(
-                                    'Signature Area',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 10,
-                                      color: AppColors.outline,
-                                    ),
-                                  ),
-                                ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Standardized layout',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: AppTheme.spaceMd),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppTheme.spaceLg),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      ),
+                      child: Column(
+                        children: [
+                          // Photo area
+                          Container(
+                            width: 140,
+                            height: 180,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant.withOpacity(0.3),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(
+                                    context,
+                                  ).shadowColor.withOpacity(0.05),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: _photo != null
+                                ? Image.file(_photo!, fit: BoxFit.cover)
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.person_rounded,
+                                        size: 40,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.outlineVariant,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Photo Area',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 11,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.outline,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Signature area
+                          Container(
+                            width: 120,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant.withOpacity(0.3),
+                              ),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: _signature != null
+                                ? Image.file(_signature!, fit: BoxFit.contain)
+                                : Center(
+                                    child: Text(
+                                      'Signature Area',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 10,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.outline,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: AppTheme.spaceLg),
+              const SizedBox(height: AppTheme.spaceLg),
 
-            // ── Generate Button ─────────────────────────────────
-            PrimaryActionButton(
-              label: 'Generate Image',
-              icon: Icons.bolt_rounded,
-              onPressed: _generateCombined,
-              isLoading: _isGenerating,
-            ),
-            const SizedBox(height: AppTheme.spaceXl),
-          ],
+              // ── Generate Button ─────────────────────────────────
+              PrimaryActionButton(
+                label: 'Generate Image',
+                icon: Icons.bolt_rounded,
+                onPressed: _generateCombined,
+                isLoading: _isGenerating,
+              ),
+              const SizedBox(height: AppTheme.spaceXl),
+            ],
+          ),
         ),
       ),
     );
@@ -377,14 +413,14 @@ class _UploadSection extends StatelessWidget {
               Container(
                 width: 24,
                 height: 24,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryContainer,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     number,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -396,7 +432,7 @@ class _UploadSection extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -426,8 +462,7 @@ class _UploadSection extends StatelessWidget {
                 ? Stack(
                     children: [
                       ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusMd),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                         child: Image.file(
                           file!,
                           width: double.infinity,
@@ -446,8 +481,11 @@ class _UploadSection extends StatelessWidget {
                               color: Colors.black45,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Icon(Icons.close,
-                                color: Colors.white, size: 16),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                           ),
                         ),
                       ),

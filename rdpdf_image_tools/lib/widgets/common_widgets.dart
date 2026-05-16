@@ -31,7 +31,9 @@ class PrimaryActionButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryContainer.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withOpacity(0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -39,11 +41,11 @@ class PrimaryActionButton extends StatelessWidget {
           ),
           child: Center(
             child: isLoading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                       strokeWidth: 2.5,
                     ),
                   )
@@ -51,16 +53,20 @@ class PrimaryActionButton extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (icon != null) ...[
-                        Icon(icon, color: Colors.white, size: 24),
+                        Icon(
+                          icon,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          size: 24,
+                        ),
                         const SizedBox(width: 8),
                       ],
                       Text(
                         label,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
                     ],
@@ -101,7 +107,9 @@ class UploadArea extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(
-              color: AppColors.outlineVariant.withOpacity(0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withOpacity(0.5),
             ),
           ),
           clipBehavior: Clip.antiAlias,
@@ -118,10 +126,14 @@ class UploadArea extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border: Border.all(
-            color: AppColors.outlineVariant.withOpacity(0.5),
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withOpacity(0.5),
             style: BorderStyle.solid,
           ),
-          color: AppColors.surfaceContainerLow.withOpacity(0.5),
+          color: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerLow.withOpacity(0.5),
         ),
         child: CustomPaint(
           painter: _DashedBorderPainter(
@@ -135,7 +147,9 @@ class UploadArea extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -254,7 +268,9 @@ class PresetChip extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
                       color: isSelected
-                          ? Theme.of(context).colorScheme.primary.withOpacity(0.7)
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.7)
                           : Theme.of(context).colorScheme.outline,
                     ),
                   ),
@@ -305,7 +321,9 @@ class PremiumCard extends StatelessWidget {
     return Container(
       padding: padding ?? const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+        color:
+            Theme.of(context).cardTheme.color ??
+            Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: AppTheme.cardShadow,
       ),

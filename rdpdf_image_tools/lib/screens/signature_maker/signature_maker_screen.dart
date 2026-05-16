@@ -10,7 +10,6 @@ import 'package:signature/signature.dart';
 import '../../services/image_processing_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/app_bars.dart';
 import '../../widgets/common_widgets.dart';
 
 /// Signature Maker screen matching premium_signature_maker design.
@@ -115,19 +114,22 @@ class _SignatureMakerScreenState extends State<SignatureMakerScreen> {
         final fileSize = ImageProcessingService.formatFileSize(
           await outputFile.length(),
         );
-        context.push('/result', extra: {
-          'filePath': outputFile.path,
-          'fileSize': fileSize,
-          'dimensions': '600 × 300 px',
-          'format': 'PNG',
-          'toolName': 'Signature Maker',
-        });
+        context.push(
+          '/result',
+          extra: {
+            'filePath': outputFile.path,
+            'fileSize': fileSize,
+            'dimensions': '600 × 300 px',
+            'format': 'PNG',
+            'toolName': 'Signature Maker',
+          },
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
 
@@ -137,179 +139,192 @@ class _SignatureMakerScreenState extends State<SignatureMakerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const GradientAppBar(showBackButton: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppTheme.containerMargin),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──────────────────────────────────────────
-            Text(
-              'Signature Maker',
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    color: AppColors.onSurface,
-                  ),
-            ),
-            const SizedBox(height: AppTheme.spaceXs),
-            Text(
-              'Draw your signature clearly within the canvas area below.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: AppTheme.spaceLg),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppTheme.containerMargin),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header ──────────────────────────────────────────
+              Text(
+                'Signature Maker',
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceXs),
+              Text(
+                'Draw your signature clearly within the canvas area below.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceLg),
 
-            // ── Canvas Card ─────────────────────────────────────
-            PremiumCard(
-              child: Column(
-                children: [
-                  // Toolbar
-                  Row(
-                    children: [
-                      Text(
-                        'Drawing\nCanvas',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.onSurfaceVariant,
+              // ── Canvas Card ─────────────────────────────────────
+              PremiumCard(
+                child: Column(
+                  children: [
+                    // Toolbar
+                    Row(
+                      children: [
+                        Text(
+                          'Drawing\nCanvas',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const Spacer(),
+                        _ToolButton(
+                          icon: Icons.upload_rounded,
+                          label: 'Upload',
+                          sublabel: 'Transparent\nPNG preferred',
+                          onTap: _uploadSignature,
+                        ),
+                        const SizedBox(width: 12),
+                        _ToolButton(
+                          icon: Icons.undo_rounded,
+                          label: 'Undo',
+                          onTap: () => _signatureController.undo(),
+                        ),
+                        const SizedBox(width: 12),
+                        _ToolButton(
+                          icon: Icons.delete_outline_rounded,
+                          label: 'Clear',
+                          onTap: () {
+                            _signatureController.clear();
+                            setState(() => _uploadedSignature = null);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spaceSm),
+
+                    // Canvas / Preview
+                    Container(
+                      height: 280,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outlineVariant.withOpacity(0.3),
                         ),
                       ),
-                      const Spacer(),
-                      _ToolButton(
-                        icon: Icons.upload_rounded,
-                        label: 'Upload',
-                        sublabel: 'Transparent\nPNG preferred',
-                        onTap: _uploadSignature,
-                      ),
-                      const SizedBox(width: 12),
-                      _ToolButton(
-                        icon: Icons.undo_rounded,
-                        label: 'Undo',
-                        onTap: () => _signatureController.undo(),
-                      ),
-                      const SizedBox(width: 12),
-                      _ToolButton(
-                        icon: Icons.delete_outline_rounded,
-                        label: 'Clear',
-                        onTap: () {
-                          _signatureController.clear();
-                          setState(() => _uploadedSignature = null);
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spaceSm),
-
-                  // Canvas / Preview
-                  Container(
-                    height: 280,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(
-                        color: AppColors.outlineVariant.withOpacity(0.3),
-                      ),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: _uploadedSignature != null
-                        ? Stack(
-                            children: [
-                              Center(
-                                child: Image.file(
-                                  _uploadedSignature!,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: GestureDetector(
-                                  onTap: () => setState(
-                                      () => _uploadedSignature = null),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black38,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: const Icon(Icons.close,
-                                        color: Colors.white, size: 16),
+                      clipBehavior: Clip.antiAlias,
+                      child: _uploadedSignature != null
+                          ? Stack(
+                              children: [
+                                Center(
+                                  child: Image.file(
+                                    _uploadedSignature!,
+                                    fit: BoxFit.contain,
                                   ),
                                 ),
-                              ),
-                            ],
-                          )
-                        : Signature(
-                            controller: _signatureController,
-                            backgroundColor: Colors.white,
-                          ),
-                  ),
-
-                  // Dashed line hint
-                  if (_uploadedSignature == null)
-                    Container(
-                      margin: const EdgeInsets.only(top: 8),
-                      width: double.infinity,
-                      child: CustomPaint(
-                        painter: _DashedLinePainter(),
-                        size: const Size(double.infinity, 1),
-                      ),
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: GestureDetector(
+                                    onTap: () => setState(
+                                      () => _uploadedSignature = null,
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black38,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Signature(
+                              controller: _signatureController,
+                              backgroundColor: Colors.white,
+                            ),
                     ),
-                ],
-              ),
-            ),
 
-            const SizedBox(height: AppTheme.spaceLg),
-
-            // ── Export Size ─────────────────────────────────────
-            Text(
-              'Export Size',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.onSurface,
-                  ),
-            ),
-            const SizedBox(height: AppTheme.spaceSm),
-            Row(
-              children: List.generate(_sizeOptions.length, (index) {
-                final opt = _sizeOptions[index];
-                final isCustom = opt['kb'] == -1;
-                final label = opt['label'] as String?;
-
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                        right: index < _sizeOptions.length - 1 ? 8 : 0),
-                    child: isCustom
-                        ? _CustomKBChip(
-                            isSelected: _selectedSizeIndex == index,
-                            controller: _customKBController,
-                            onTap: () =>
-                                setState(() => _selectedSizeIndex = index),
-                          )
-                        : PresetChip(
-                            label: label!,
-                            isSelected: _selectedSizeIndex == index,
-                            onTap: () =>
-                                setState(() => _selectedSizeIndex = index),
+                    // Dashed line hint
+                    if (_uploadedSignature == null)
+                      Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        width: double.infinity,
+                        child: CustomPaint(
+                          painter: _DashedLinePainter(
+                            color: Theme.of(context).colorScheme.outlineVariant,
                           ),
-                  ),
-                );
-              }),
-            ),
+                          size: const Size(double.infinity, 1),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
 
-            const SizedBox(height: AppTheme.spaceLg),
+              const SizedBox(height: AppTheme.spaceLg),
 
-            // ── Save Button ─────────────────────────────────────
-            PrimaryActionButton(
-              label: 'Save Signature ⚡',
-              icon: Icons.save_rounded,
-              onPressed: _saveSignature,
-              isLoading: _isSaving,
-            ),
-            const SizedBox(height: AppTheme.spaceXl),
-          ],
+              // ── Export Size ─────────────────────────────────────
+              Text(
+                'Export Size',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceSm),
+              Row(
+                children: List.generate(_sizeOptions.length, (index) {
+                  final opt = _sizeOptions[index];
+                  final isCustom = opt['kb'] == -1;
+                  final label = opt['label'] as String?;
+
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: index < _sizeOptions.length - 1 ? 8 : 0,
+                      ),
+                      child: isCustom
+                          ? _CustomKBChip(
+                              isSelected: _selectedSizeIndex == index,
+                              controller: _customKBController,
+                              onTap: () =>
+                                  setState(() => _selectedSizeIndex = index),
+                            )
+                          : PresetChip(
+                              label: label!,
+                              isSelected: _selectedSizeIndex == index,
+                              onTap: () =>
+                                  setState(() => _selectedSizeIndex = index),
+                            ),
+                    ),
+                  );
+                }),
+              ),
+
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Save Button ─────────────────────────────────────
+              PrimaryActionButton(
+                label: 'Save Signature ⚡',
+                icon: Icons.save_rounded,
+                onPressed: _saveSignature,
+                isLoading: _isSaving,
+              ),
+              const SizedBox(height: AppTheme.spaceXl),
+            ],
+          ),
         ),
       ),
     );
@@ -336,22 +351,30 @@ class _ToolButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.outlineVariant.withOpacity(0.3)),
+          border: Border.all(
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withOpacity(0.3),
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: AppColors.onSurfaceVariant),
+            Icon(
+              icon,
+              size: 18,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: AppColors.onSurfaceVariant,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             if (sublabel != null)
@@ -362,7 +385,7 @@ class _ToolButton extends StatelessWidget {
                   fontFamily: 'Inter',
                   fontSize: 9,
                   fontWeight: FontWeight.w300,
-                  color: AppColors.outline,
+                  color: Theme.of(context).colorScheme.outline,
                 ),
               ),
           ],
@@ -393,13 +416,13 @@ class _CustomKBChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primaryFixed.withOpacity(0.3)
-              : Colors.white,
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+              : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border: Border.all(
             color: isSelected
-                ? AppColors.primaryContainer
-                : AppColors.surfaceContainerHigh,
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -414,12 +437,12 @@ class _CustomKBChip extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Custom',
                   hintStyle: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 13,
-                    color: AppColors.outline,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   border: InputBorder.none,
                   isDense: true,
@@ -432,7 +455,7 @@ class _CustomKBChip extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 11,
-                color: AppColors.outline,
+                color: Theme.of(context).colorScheme.outline,
               ),
             ),
           ],
@@ -443,10 +466,14 @@ class _CustomKBChip extends StatelessWidget {
 }
 
 class _DashedLinePainter extends CustomPainter {
+  final Color color;
+
+  _DashedLinePainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.outlineVariant
+      ..color = color
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
@@ -454,11 +481,7 @@ class _DashedLinePainter extends CustomPainter {
     const dashSpace = 4.0;
     double startX = 0;
     while (startX < size.width) {
-      canvas.drawLine(
-        Offset(startX, 0),
-        Offset(startX + dashWidth, 0),
-        paint,
-      );
+      canvas.drawLine(Offset(startX, 0), Offset(startX + dashWidth, 0), paint);
       startX += dashWidth + dashSpace;
     }
   }

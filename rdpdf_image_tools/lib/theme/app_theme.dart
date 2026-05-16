@@ -267,7 +267,7 @@ class AppTheme {
       onSurface: AppColors.darkOnSurface,
       onSurfaceVariant: AppColors.darkOnSurfaceVariant,
       outline: AppColors.darkOutline,
-      outlineVariant: const Color(0xFF374151),
+      outlineVariant: AppColors.darkSurfaceContainerHigh,
       inverseSurface: AppColors.surfaceDim,
       onInverseSurface: AppColors.onSurface,
       inversePrimary: AppColors.primary,
@@ -322,7 +322,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(0, 48),
           foregroundColor: AppColors.inversePrimary,
-          side: const BorderSide(color: Color(0xFF374151)),
+          side: const BorderSide(color: AppColors.darkOutline),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusDefault),
           ),
@@ -347,7 +347,7 @@ class AppTheme {
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.darkSurface,
         selectedItemColor: AppColors.inversePrimary,
-        unselectedItemColor: const Color(0xFF6B7280),
+        unselectedItemColor: AppColors.darkOutline,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
         showUnselectedLabels: true,
@@ -360,7 +360,7 @@ class AppTheme {
         trackHeight: 4,
       ),
       dividerTheme: const DividerThemeData(
-        color: Color(0xFF1F2937),
+        color: AppColors.darkSurfaceContainer,
         thickness: 1,
       ),
     );
