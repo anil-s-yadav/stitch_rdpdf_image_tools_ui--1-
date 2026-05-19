@@ -64,8 +64,8 @@ class AppShell extends StatelessWidget {
                   onTap: () => _onTap(context, 0),
                 ),
                 _NavItem(
-                  icon: Icons.build_rounded,
-                  label: 'Tools',
+                  icon: Icons.folder_rounded,
+                  label: 'My Files',
                   isActive: idx == 1,
                   onTap: () => _onTap(context, 1),
                 ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/photo_preset.dart';
+import '../../services/file_service.dart';
 import '../../services/image_processing_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -20,6 +21,7 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
   File? _selectedImage;
   int _selectedPresetIndex = 0;
   bool _isProcessing = false;
+  OutputFormat _outputFormat = OutputFormat.png;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -66,6 +68,7 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
                 )
               : '',
           'toolName': 'Passport Photo Maker',
+          'outputFormat': _outputFormat.name,
         },
       );
     }
@@ -229,6 +232,13 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
                 ),
               ),
 
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Output Format ────────────────────────────────────
+              FormatPicker(
+                selected: _outputFormat,
+                onChanged: (fmt) => setState(() => _outputFormat = fmt),
+              ),
               const SizedBox(height: AppTheme.spaceLg),
 
               // ── Process Button ──────────────────────────────────

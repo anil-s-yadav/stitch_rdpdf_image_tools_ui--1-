@@ -6,14 +6,15 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 
-/// Processing Result screen matching process_result_dashboard design.
-class ResultScreen extends StatelessWidget {
+/// Processing Result screen — auto-saves to Downloads/RedImage/ on load.
+class ResultScreen extends StatefulWidget {
   final String filePath;
   final String fileSize;
   final String dimensions;
   final String format;
   final String originalSize;
   final String toolName;
+  final String outputFormat; // 'png', 'jpeg', or 'pdf'
 
   const ResultScreen({
     super.key,
@@ -23,15 +24,104 @@ class ResultScreen extends StatelessWidget {
     required this.format,
     this.originalSize = '',
     this.toolName = '',
+    this.outputFormat = 'png',
   });
 
   @override
+  State<ResultScreen> createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen> {
+  bool _autoSaved = false;
+  String _savedPath = '';
+  bool _isSaving = false;
+
+  OutputFormat get _outputFormat {
+    switch (widget.outputFormat.toLowerCase()) {
+      case 'jpeg':
+      case 'jpg':
+        return OutputFormat.jpeg;
+      case 'pdf':
+        return OutputFormat.pdf;
+      default:
+        return OutputFormat.png;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _autoSave();
+  }
+
+  Future<void> _autoSave() async {
+    try {
+      final file = File(widget.filePath);
+      if (!file.existsSync()) return;
+
+      final saved = await FileService.saveToRedImage(
+        file,
+        toolName: widget.toolName,
+        outputFormat: _outputFormat,
+      );
+
+      if (mounted) {
+        setState(() {
+          _autoSaved = true;
+          _savedPath = saved.path;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _autoSaved = false);
+      }
+    }
+  }
+
+  Future<void> _saveAgain() async {
+    setState(() => _isSaving = true);
+    try {
+      final file = File(widget.filePath);
+      if (!file.existsSync()) throw Exception('Source file not found');
+
+      final saved = await FileService.saveToRedImage(
+        file,
+        toolName: widget.toolName,
+        outputFormat: _outputFormat,
+      );
+
+      if (mounted) {
+        setState(() {
+          _savedPath = saved.path;
+          _isSaving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Saved as ${_outputFormat.name.toUpperCase()} to Downloads/RedImage/',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving: $e')));
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isImage = !filePath.toLowerCase().endsWith('.pdf');
-    final file = File(filePath);
+    final cs = Theme.of(context).colorScheme;
+    final isImage = !widget.filePath.toLowerCase().endsWith('.pdf');
+    final file = File(widget.filePath);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: cs.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppTheme.containerMargin),
@@ -44,13 +134,11 @@ class ResultScreen extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
+                  color: cs.primaryContainer,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer.withOpacity(0.3),
+                      color: cs.primaryContainer.withOpacity(0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 6),
                     ),
@@ -58,7 +146,7 @@ class ResultScreen extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.check_rounded,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  color: cs.onPrimaryContainer,
                   size: 40,
                 ),
               ),
@@ -66,19 +154,78 @@ class ResultScreen extends StatelessWidget {
 
               // ── Title ───────────────────────────────────────────
               Text(
-                'Processing Complete',
+                'Saved Successfully',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: cs.onSurface,
                   fontSize: 28,
                 ),
               ),
               const SizedBox(height: AppTheme.spaceSm),
-              Text(
-                'Your image has been successfully optimized\nand is ready for download.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+
+              // ── Auto-save status ────────────────────────────────
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _autoSaved
+                    ? Container(
+                        key: const ValueKey('saved'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: AppColors.success,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Auto-saved to Downloads/RedImage/',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Container(
+                        key: const ValueKey('saving'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: cs.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Saving…',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
               ),
               const SizedBox(height: AppTheme.spaceLg),
 
@@ -93,7 +240,7 @@ class ResultScreen extends StatelessWidget {
                       height: 240,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        color: Theme.of(context).colorScheme.surfaceContainer,
+                        color: cs.surfaceContainer,
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: isImage && file.existsSync()
@@ -105,9 +252,7 @@ class ResultScreen extends StatelessWidget {
                                   Icon(
                                     Icons.picture_as_pdf_rounded,
                                     size: 64,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primaryContainer,
+                                    color: cs.primaryContainer,
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
@@ -115,9 +260,7 @@ class ResultScreen extends StatelessWidget {
                                     style: TextStyle(
                                       fontFamily: 'Inter',
                                       fontSize: 14,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
+                                      color: cs.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -140,25 +283,23 @@ class ResultScreen extends StatelessWidget {
                     // Stat cards
                     Row(
                       children: [
-                        // New size
                         Expanded(
                           child: _StatCard(
                             label: 'NEW SIZE',
-                            value: fileSize,
-                            subValue: originalSize.isNotEmpty
-                                ? originalSize
+                            value: widget.fileSize,
+                            subValue: widget.originalSize.isNotEmpty
+                                ? widget.originalSize
                                 : null,
-                            valueColor: Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer,
+                            valueColor: cs.primaryContainer,
                           ),
                         ),
                         const SizedBox(width: AppTheme.spaceSm),
-                        // Dimensions
                         Expanded(
                           child: _StatCard(
                             label: 'DIMENSIONS',
-                            value: dimensions.isNotEmpty ? dimensions : '—',
+                            value: widget.dimensions.isNotEmpty
+                                ? widget.dimensions
+                                : '—',
                           ),
                         ),
                       ],
@@ -169,16 +310,12 @@ class ResultScreen extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerLow,
+                        color: cs.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(
                           AppTheme.radiusDefault,
                         ),
                         border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.outlineVariant.withOpacity(0.2),
+                          color: cs.outlineVariant.withOpacity(0.2),
                         ),
                       ),
                       child: Row(
@@ -193,21 +330,17 @@ class ResultScreen extends StatelessWidget {
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
                                   letterSpacing: 0.5,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
+                                  color: cs.onSurfaceVariant,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                format,
+                                _outputFormat.name.toUpperCase(),
                                 style: TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
+                                  color: cs.onSurface,
                                 ),
                               ),
                             ],
@@ -219,21 +352,17 @@ class ResultScreen extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHigh,
+                              color: cs.surfaceContainerHigh,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              'OPTIMIZED',
+                              'Optimized',
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
                           ),
@@ -246,31 +375,12 @@ class ResultScreen extends StatelessWidget {
 
               const SizedBox(height: AppTheme.spaceLg),
 
-              // ── Download Button ─────────────────────────────────
+              // ── Save Again Button ───────────────────────────────
               PrimaryActionButton(
-                label: 'Download Now',
-                icon: Icons.bolt_rounded,
-                onPressed: () async {
-                  try {
-                    final saved = await FileService.saveToDocuments(
-                      File(filePath),
-                    );
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Saved to ${saved.path}'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error saving: $e')),
-                      );
-                    }
-                  }
-                },
+                label: 'Save Again',
+                icon: Icons.save_rounded,
+                onPressed: _saveAgain,
+                isLoading: _isSaving,
               ),
               const SizedBox(height: AppTheme.spaceSm),
 
@@ -279,8 +389,10 @@ class ResultScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () =>
-                          FileService.shareFile(filePath, subject: toolName),
+                      onPressed: () => FileService.shareFile(
+                        _savedPath.isNotEmpty ? _savedPath : widget.filePath,
+                        subject: widget.toolName,
+                      ),
                       icon: const Icon(Icons.share_rounded, size: 18),
                       label: const Text('Share'),
                     ),
@@ -313,6 +425,7 @@ class ResultScreen extends StatelessWidget {
   }
 }
 
+// ── Stat Card ────────────────────────────────────────────────────────────
 class _StatCard extends StatelessWidget {
   final String label;
   final String value;
@@ -328,14 +441,13 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppTheme.radiusDefault),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
-        ),
+        border: Border.all(color: cs.outlineVariant.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,7 +459,7 @@ class _StatCard extends StatelessWidget {
               fontSize: 10,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.5,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: cs.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 4),
@@ -357,7 +469,7 @@ class _StatCard extends StatelessWidget {
               fontFamily: 'Inter',
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: valueColor ?? Theme.of(context).colorScheme.onSurface,
+              color: valueColor ?? cs.onSurface,
             ),
           ),
           if (subValue != null) ...[
@@ -367,7 +479,7 @@ class _StatCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 12,
-                color: Theme.of(context).colorScheme.outline,
+                color: cs.outline,
                 decoration: TextDecoration.lineThrough,
               ),
             ),

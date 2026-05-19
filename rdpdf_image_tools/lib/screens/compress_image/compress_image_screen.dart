@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../services/file_service.dart';
 import '../../services/image_processing_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -20,6 +21,7 @@ class _CompressImageScreenState extends State<CompressImageScreen> {
   double _quality = 80;
   bool _isCompressing = false;
   String _originalSize = '';
+  OutputFormat _outputFormat = OutputFormat.png;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -64,6 +66,7 @@ class _CompressImageScreenState extends State<CompressImageScreen> {
           'format': 'JPEG',
           'originalSize': _originalSize,
           'toolName': 'Compress Image',
+          'outputFormat': _outputFormat.name,
         },
       );
     }
@@ -305,6 +308,13 @@ class _CompressImageScreenState extends State<CompressImageScreen> {
                 ],
               ),
 
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Output Format ────────────────────────────────────
+              FormatPicker(
+                selected: _outputFormat,
+                onChanged: (fmt) => setState(() => _outputFormat = fmt),
+              ),
               const SizedBox(height: AppTheme.spaceLg),
 
               // ── Compress Button ─────────────────────────────────

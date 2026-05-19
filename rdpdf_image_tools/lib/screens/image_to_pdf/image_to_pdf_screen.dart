@@ -70,6 +70,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
           'dimensions': '${_images.length} pages',
           'format': 'PDF',
           'toolName': 'Image to PDF',
+          'outputFormat': 'pdf',
         },
       );
     }

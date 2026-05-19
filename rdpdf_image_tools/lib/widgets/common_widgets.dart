@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/file_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 
@@ -328,6 +329,79 @@ class PremiumCard extends StatelessWidget {
         boxShadow: AppTheme.cardShadow,
       ),
       child: child,
+    );
+  }
+}
+
+/// Reusable output format picker (PNG / JPEG / PDF).
+class FormatPicker extends StatelessWidget {
+  final OutputFormat selected;
+  final ValueChanged<OutputFormat> onChanged;
+
+  const FormatPicker({
+    super.key,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Save As',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: cs.onSurface,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spaceSm),
+        Row(
+          children: [
+            for (final fmt in OutputFormat.values) ...[
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onChanged(fmt),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: selected == fmt
+                          ? cs.primary.withOpacity(0.15)
+                          : cs.surface,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      border: Border.all(
+                        color: selected == fmt
+                            ? cs.primary
+                            : cs.outlineVariant.withOpacity(0.5),
+                        width: selected == fmt ? 2 : 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        fmt.name.toUpperCase(),
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: selected == fmt ? cs.primary : cs.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (fmt != OutputFormat.values.last)
+                const SizedBox(width: 8),
+            ],
+          ],
+        ),
+      ],
     );
   }
 }

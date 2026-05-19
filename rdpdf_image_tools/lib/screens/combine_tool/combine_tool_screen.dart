@@ -2,10 +2,12 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import '../../services/file_service.dart';
 import '../../services/image_processing_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -19,10 +21,30 @@ class CombineToolScreen extends StatefulWidget {
   State<CombineToolScreen> createState() => _CombineToolScreenState();
 }
 
+class _ItemState {
+  Offset position;
+  double scale;
+  double baseScale;
+  _ItemState({required this.position, this.scale = 1.0, this.baseScale = 1.0});
+}
+
 class _CombineToolScreenState extends State<CombineToolScreen> {
   File? _photo;
   File? _signature;
   bool _isGenerating = false;
+  OutputFormat _outputFormat = OutputFormat.png;
+  final _kbController = TextEditingController();
+  int? _targetKB;
+
+  final GlobalKey _previewKey = GlobalKey();
+  final _photoState = _ItemState(position: const Offset(60, 20), scale: 1.0);
+  final _sigState = _ItemState(position: const Offset(90, 220), scale: 1.0);
+
+  @override
+  void dispose() {
+    _kbController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickPhoto() async {
     final picker = ImagePicker();
@@ -47,54 +69,16 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
     setState(() => _isGenerating = true);
 
     try {
-      // Combine images using the image package approach:
-      // Load both images, draw photo on top, signature below
-      final photoBytes = await _photo!.readAsBytes();
-      final sigBytes = await _signature!.readAsBytes();
+      // Brief delay to allow UI to rebuild without borders before capturing
+      await Future.delayed(const Duration(milliseconds: 100));
 
-      final photoCodec = await ui.instantiateImageCodec(photoBytes);
-      final photoFrame = await photoCodec.getNextFrame();
-      final photoImg = photoFrame.image;
+      final boundary =
+          _previewKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary == null) throw Exception('Preview not ready');
 
-      final sigCodec = await ui.instantiateImageCodec(sigBytes);
-      final sigFrame = await sigCodec.getNextFrame();
-      final sigImg = sigFrame.image;
-
-      // Canvas: photo width, photo height + signature height
-      final canvasWidth = photoImg.width;
-      final sigScaleW = canvasWidth / sigImg.width;
-      final scaledSigH = (sigImg.height * sigScaleW).round();
-      final canvasHeight = photoImg.height + scaledSigH;
-
-      final recorder = ui.PictureRecorder();
-      final canvas = Canvas(recorder);
-
-      // White background
-      canvas.drawRect(
-        Rect.fromLTWH(0, 0, canvasWidth.toDouble(), canvasHeight.toDouble()),
-        Paint()..color = Colors.white,
-      );
-
-      // Draw photo
-      canvas.drawImage(photoImg, Offset.zero, Paint());
-
-      // Draw signature scaled below photo
-      final sigRect = Rect.fromLTWH(
-        0,
-        photoImg.height.toDouble(),
-        canvasWidth.toDouble(),
-        scaledSigH.toDouble(),
-      );
-      canvas.drawImageRect(
-        sigImg,
-        Rect.fromLTWH(0, 0, sigImg.width.toDouble(), sigImg.height.toDouble()),
-        sigRect,
-        Paint(),
-      );
-
-      final picture = recorder.endRecording();
-      final combinedImg = await picture.toImage(canvasWidth, canvasHeight);
-      final byteData = await combinedImg.toByteData(
+      final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      final ByteData? byteData = await image.toByteData(
         format: ui.ImageByteFormat.png,
       );
 
@@ -104,8 +88,23 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
           dir.path,
           'combined_${DateTime.now().millisecondsSinceEpoch}.png',
         );
-        final outFile = File(outPath);
+        File outFile = File(outPath);
         await outFile.writeAsBytes(byteData.buffer.asUint8List());
+
+        // Apply compression if target KB is set
+        if (_targetKB != null && _targetKB! > 0) {
+          final compressedFile = await ImageProcessingService.resizeToTargetKB(
+            inputPath: outFile.path,
+            targetKB: _targetKB!,
+          );
+          if (compressedFile != null) {
+            // Delete the uncompressed file and use the compressed one
+            if (await outFile.exists()) {
+              await outFile.delete();
+            }
+            outFile = compressedFile;
+          }
+        }
 
         if (mounted) {
           final fileSize = ImageProcessingService.formatFileSize(
@@ -116,9 +115,10 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
             extra: {
               'filePath': outFile.path,
               'fileSize': fileSize,
-              'dimensions': '${canvasWidth} × $canvasHeight px',
+              'dimensions': '${image.width} × ${image.height} px',
               'format': 'PNG',
               'toolName': 'Combine Photo + Signature',
+              'outputFormat': _outputFormat.name,
             },
           );
         }
@@ -134,12 +134,91 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
     setState(() => _isGenerating = false);
   }
 
+  Widget _buildPlaceholder(
+    IconData icon,
+    String text,
+    double width,
+    double height,
+  ) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey.shade100,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 40, color: Colors.grey.shade400),
+          const SizedBox(height: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 11,
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInteractiveItem(
+    File? file,
+    _ItemState state,
+    Widget placeholder,
+  ) {
+    final content = file != null
+        ? Image.file(file, fit: BoxFit.contain)
+        : placeholder;
+
+    return Positioned(
+      left: state.position.dx,
+      top: state.position.dy,
+      child: Transform.scale(
+        scale: state.scale,
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onScaleStart: (details) {
+            state.baseScale = state.scale;
+          },
+          onScaleUpdate: (details) {
+            setState(() {
+              state.position += details.focalPointDelta * state.scale;
+              state.scale = state.baseScale * details.scale;
+            });
+          },
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 180, maxHeight: 180),
+            decoration: BoxDecoration(
+              border: _isGenerating
+                  ? null
+                  : Border.all(
+                      color: file != null
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.5)
+                          : Colors.grey.withOpacity(0.5),
+                      width: 1 / state.scale.clamp(0.1, 10.0),
+                    ),
+            ),
+            child: content,
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool _isDragging = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: _isDragging
+              ? const NeverScrollableScrollPhysics()
+              : const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppTheme.containerMargin),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,7 +332,7 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'Standardized layout',
+                            'Interactive Editor',
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 11,
@@ -266,103 +345,149 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppTheme.spaceMd),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppTheme.spaceLg),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Hold image to drag, zoom, and position the photo and signature freely.',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                      child: Column(
-                        children: [
-                          // Photo area
-                          Container(
-                            width: 140,
-                            height: 180,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
+                    ),
+                    const SizedBox(height: AppTheme.spaceMd),
+                    Listener(
+                      onPointerDown: (_) => setState(() => _isDragging = true),
+                      onPointerUp: (_) => setState(() => _isDragging = false),
+                      onPointerCancel: (_) =>
+                          setState(() => _isDragging = false),
+                      child: Center(
+                        child: Container(
+                          width: 300,
+                          height: 400,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.outlineVariant.withOpacity(0.3),
+                                ).shadowColor.withOpacity(0.05),
+                                blurRadius: 10,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Theme.of(
-                                    context,
-                                  ).shadowColor.withOpacity(0.05),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: _photo != null
-                                ? Image.file(_photo!, fit: BoxFit.cover)
-                                : Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.person_rounded,
-                                        size: 40,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.outlineVariant,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Photo Area',
-                                        style: TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontSize: 11,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.outline,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          // Signature area
-                          Container(
-                            width: 120,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.outlineVariant.withOpacity(0.3),
-                              ),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: _signature != null
-                                ? Image.file(_signature!, fit: BoxFit.contain)
-                                : Center(
-                                    child: Text(
-                                      'Signature Area',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 10,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.outline,
-                                      ),
+                          child: ClipRect(
+                            child: RepaintBoundary(
+                              key: _previewKey,
+                              child: Stack(
+                                children: [
+                                  // Background needs to be explicitly colored for the output
+                                  Container(color: Colors.white),
+                                  _buildInteractiveItem(
+                                    _photo,
+                                    _photoState,
+                                    _buildPlaceholder(
+                                      Icons.person_rounded,
+                                      'Photo Area',
+                                      140,
+                                      180,
                                     ),
                                   ),
+                                  _buildInteractiveItem(
+                                    _signature,
+                                    _sigState,
+                                    _buildPlaceholder(
+                                      Icons.draw_rounded,
+                                      'Signature Area',
+                                      120,
+                                      60,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
 
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Target Size Input ───────────────────────────────
+              Text(
+                'Target Size Limit (Optional)',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceSm),
+              Container(
+                height: 35,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _kbController,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          hintText: 'e.g. 100',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                        onChanged: (val) {
+                          setState(() {
+                            _targetKB = int.tryParse(val);
+                          });
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16, left: 10),
+                      child: Text(
+                        'KB',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Output Format ────────────────────────────────────
+              FormatPicker(
+                selected: _outputFormat,
+                onChanged: (fmt) => setState(() => _outputFormat = fmt),
+              ),
               const SizedBox(height: AppTheme.spaceLg),
 
               // ── Generate Button ─────────────────────────────────
@@ -465,8 +590,9 @@ class _UploadSection extends StatelessWidget {
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                         child: Image.file(
                           file!,
+
                           width: double.infinity,
-                          height: 140,
+                          height: 250,
                           fit: BoxFit.cover,
                         ),
                       ),

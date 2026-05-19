@@ -1,14 +1,12 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:signature/signature.dart';
+import '../../services/file_service.dart';
 import '../../services/image_processing_service.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 
@@ -31,6 +29,7 @@ class _SignatureMakerScreenState extends State<SignatureMakerScreen> {
   int _selectedSizeIndex = 1; // 10 KB default
   bool _isSaving = false;
   File? _uploadedSignature;
+  OutputFormat _outputFormat = OutputFormat.png;
 
   final List<Map<String, dynamic>> _sizeOptions = [
     {'label': 'Auto', 'kb': 0},
@@ -122,6 +121,7 @@ class _SignatureMakerScreenState extends State<SignatureMakerScreen> {
             'dimensions': '600 × 300 px',
             'format': 'PNG',
             'toolName': 'Signature Maker',
+            'outputFormat': _outputFormat.name,
           },
         );
       }
@@ -313,6 +313,13 @@ class _SignatureMakerScreenState extends State<SignatureMakerScreen> {
                 }),
               ),
 
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Output Format ────────────────────────────────────
+              FormatPicker(
+                selected: _outputFormat,
+                onChanged: (fmt) => setState(() => _outputFormat = fmt),
+              ),
               const SizedBox(height: AppTheme.spaceLg),
 
               // ── Save Button ─────────────────────────────────────

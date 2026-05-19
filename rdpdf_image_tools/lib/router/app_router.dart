@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../screens/home/home_screen.dart';
+import '../screens/my_files/my_files_screen.dart';
 import '../screens/passport_photo/passport_photo_screen.dart';
 import '../screens/resize_image/resize_image_screen.dart';
 import '../screens/signature_maker/signature_maker_screen.dart';
@@ -30,7 +31,7 @@ final GoRouter appRouter = GoRouter(
           path: '/tools',
           name: 'tools',
           pageBuilder: (context, state) => const NoTransitionPage(
-            child: HomeScreen(), // Tools view reuses home grid
+            child: MyFilesScreen(),
           ),
         ),
         GoRoute(
@@ -104,6 +105,7 @@ final GoRouter appRouter = GoRouter(
             format: extra['format'] as String? ?? 'JPEG',
             originalSize: extra['originalSize'] as String? ?? '',
             toolName: extra['toolName'] as String? ?? '',
+            outputFormat: extra['outputFormat'] as String? ?? 'png',
           ),
           transitionsBuilder: _slideTransition,
         );

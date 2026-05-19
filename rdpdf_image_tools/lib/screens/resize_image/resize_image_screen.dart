@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../services/file_service.dart';
 import '../../services/image_processing_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -23,6 +24,7 @@ class _ResizeImageScreenState extends State<ResizeImageScreen> {
   bool _isProcessing = false;
   String _originalSize = '';
   String _originalDimensions = '';
+  OutputFormat _outputFormat = OutputFormat.png;
 
   final _kbController = TextEditingController(text: '100');
 
@@ -95,6 +97,7 @@ class _ResizeImageScreenState extends State<ResizeImageScreen> {
           'format': 'JPEG',
           'originalSize': _originalSize,
           'toolName': 'Resize Image to KB',
+          'outputFormat': _outputFormat.name,
         },
       );
     }
@@ -447,7 +450,7 @@ class _ResizeImageScreenState extends State<ResizeImageScreen> {
 
               // ── Target Size Input ───────────────────────────────
               Text(
-                'Target Size Limit',
+                'Enter Target Size Limit',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
@@ -488,7 +491,7 @@ class _ResizeImageScreenState extends State<ResizeImageScreen> {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.only(right: 16),
+                      padding: EdgeInsets.only(right: 16, left: 10),
                       child: Text(
                         'KB',
                         style: TextStyle(
@@ -579,6 +582,13 @@ class _ResizeImageScreenState extends State<ResizeImageScreen> {
                 }),
               ),
 
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Output Format ────────────────────────────────────
+              FormatPicker(
+                selected: _outputFormat,
+                onChanged: (fmt) => setState(() => _outputFormat = fmt),
+              ),
               const SizedBox(height: AppTheme.spaceLg),
 
               // ── Resize Button ───────────────────────────────────
