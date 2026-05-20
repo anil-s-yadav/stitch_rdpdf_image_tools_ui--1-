@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/photo_preset.dart';
 import '../../services/file_service.dart';
 import '../../services/image_processing_service.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 

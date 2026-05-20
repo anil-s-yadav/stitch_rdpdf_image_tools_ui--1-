@@ -540,7 +540,7 @@ class _SettingTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) trailing!,
+            ?trailing,
             if (onTap != null && trailing == null)
               Icon(
                 Icons.chevron_right_rounded,

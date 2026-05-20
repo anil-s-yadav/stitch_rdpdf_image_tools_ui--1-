@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
@@ -28,19 +27,15 @@ class PdfService {
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(0),
           build: (context) {
-            return pw.Center(
-              child: pw.Image(
-                image,
-                fit: pw.BoxFit.contain,
-              ),
-            );
+            return pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain));
           },
         ),
       );
     }
 
     final dir = await getTemporaryDirectory();
-    final fileName = outputFileName ?? 'images_${DateTime.now().millisecondsSinceEpoch}';
+    final fileName =
+        outputFileName ?? 'images_${DateTime.now().millisecondsSinceEpoch}';
     final outPath = path.join(dir.path, '$fileName.pdf');
     final outFile = File(outPath);
     await outFile.writeAsBytes(await pdf.save());

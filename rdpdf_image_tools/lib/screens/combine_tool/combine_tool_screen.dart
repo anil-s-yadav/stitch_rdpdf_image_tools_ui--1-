@@ -25,7 +25,7 @@ class _ItemState {
   Offset position;
   double scale;
   double baseScale;
-  _ItemState({required this.position, this.scale = 1.0, this.baseScale = 1.0});
+  _ItemState({required this.position, this.scale = 1.0}) : baseScale = scale;
 }
 
 class _CombineToolScreenState extends State<CombineToolScreen> {

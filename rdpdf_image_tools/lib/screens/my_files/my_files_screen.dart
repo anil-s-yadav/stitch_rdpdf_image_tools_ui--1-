@@ -203,7 +203,7 @@ class _MyFilesScreenState extends State<MyFilesScreen>
           horizontal: AppTheme.containerMargin,
         ),
         itemCount: files.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemBuilder: (context, index) => _FileCard(
           meta: files[index],
           onShare: () => FileService.shareFile(files[index].filePath),
@@ -287,7 +287,7 @@ class _FileCard extends StatelessWidget {
                       ? Image.file(
                           file,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (_, _, _) =>
                               Icon(_categoryIcon, color: catColor, size: 24),
                         )
                       : Icon(_categoryIcon, color: catColor, size: 24),

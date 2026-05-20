@@ -1,12 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../theme/app_colors.dart';
+import 'package:in_app_update/in_app_update.dart';
 
 /// App shell providing the persistent bottom navigation bar.
-class AppShell extends StatelessWidget {
+class AppShell extends StatefulWidget {
   final Widget child;
 
   const AppShell({super.key, required this.child});
+
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
+  @override
+  void initState() {
+    super.initState();
+    _checkForUpdate();
+  }
+
+  Future<void> _checkForUpdate() async {
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        if (info.flexibleUpdateAllowed) {
+          await InAppUpdate.startFlexibleUpdate();
+          await InAppUpdate.completeFlexibleUpdate();
+        } else if (info.immediateUpdateAllowed) {
+          await InAppUpdate.performImmediateUpdate();
+        }
+      }
+    } catch (e) {
+      // Ignore update errors in production so we don't annoy the user
+      debugPrint('In-app update error: $e');
+    }
+  }
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
@@ -33,7 +61,7 @@ class AppShell extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: child,
+      body: widget.child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
