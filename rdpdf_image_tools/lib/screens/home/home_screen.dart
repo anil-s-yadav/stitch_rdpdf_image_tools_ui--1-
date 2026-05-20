@@ -3,6 +3,22 @@ import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/app_colors.dart';
 
+/// Per-tool accent colors for the home bento grid.
+abstract final class _HomeToolColors {
+  static const passport = Color(0xFF2563EB);
+  static const resize = Color(0xFF0891B2);
+  static const signature = Color(0xFF7C3AED);
+  static const compress = Color(0xFFEA580C);
+  static const combine = Color(0xFF16A34A);
+  static const imageToPdf = Color(0xFFDC2626);
+
+  static LinearGradient gradientFor(Color accent) => LinearGradient(
+    colors: [accent, Color.lerp(accent, Colors.white, 0.28)!],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+}
+
 /// Home screen matching the Stitch home_dashboard design.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -18,14 +34,55 @@ class HomeScreen extends StatelessWidget {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppTheme.containerMargin),
           child: Column(
+            spacing: 3,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Section Header ────────────────────────────────────────
-              Text(
-                'Tools',
-                style: Theme.of(
-                  context,
-                ).textTheme.displayMedium?.copyWith(color: cs.onSurface),
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade800,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spaceSm),
+                  RichText(
+                    text: TextSpan(
+                      // style: TextStyle(letterSpacing: 2),
+                      children: [
+                        TextSpan(
+                          text: 'RED',
+                          style: Theme.of(context).textTheme.displayMedium
+                              ?.copyWith(
+                                color: Colors.red.shade800,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.5,
+                              ),
+                        ),
+                        TextSpan(
+                          text: 'IMG ',
+                          style: Theme.of(context).textTheme.displayMedium
+                              ?.copyWith(
+                                color: AppColors.darkBackground,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.5,
+                              ),
+                        ),
+                        TextSpan(
+                          text: 'Tools',
+                          style: Theme.of(context).textTheme.displayMedium
+                              ?.copyWith(
+                                color: AppColors.primary,
+                                // fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: AppTheme.spaceXs),
               Text(
@@ -43,7 +100,7 @@ class HomeScreen extends StatelessWidget {
                 subtitle:
                     'For Aadhar, PAN, Gov forms, Office, School & College.',
                 icon: Icons.badge_rounded,
-                useGradientIcon: true,
+                accent: _HomeToolColors.passport,
                 onTap: () => context.push('/passport-photo'),
               ),
               const SizedBox(height: AppTheme.gutter),
@@ -53,7 +110,7 @@ class HomeScreen extends StatelessWidget {
                 title: 'Resize Image to KB',
                 subtitle: 'Precise file size targeting.',
                 icon: Icons.aspect_ratio_rounded,
-                useGradientIcon: true,
+                accent: _HomeToolColors.resize,
                 onTap: () => context.push('/resize-image'),
               ),
               const SizedBox(height: AppTheme.gutter),
@@ -65,6 +122,7 @@ class HomeScreen extends StatelessWidget {
                     child: _SmallToolCard(
                       title: 'Signature Maker',
                       icon: Icons.draw_rounded,
+                      accent: _HomeToolColors.signature,
                       onTap: () => context.push('/signature-maker'),
                     ),
                   ),
@@ -73,6 +131,7 @@ class HomeScreen extends StatelessWidget {
                     child: _SmallToolCard(
                       title: 'Compress Image',
                       icon: Icons.compress_rounded,
+                      accent: _HomeToolColors.compress,
                       onTap: () => context.push('/compress-image'),
                     ),
                   ),
@@ -87,6 +146,7 @@ class HomeScreen extends StatelessWidget {
                     child: _SmallToolCard(
                       title: 'Combine Photo\n+ Signature',
                       icon: Icons.layers_rounded,
+                      accent: _HomeToolColors.combine,
                       onTap: () => context.push('/combine-tool'),
                     ),
                   ),
@@ -95,6 +155,7 @@ class HomeScreen extends StatelessWidget {
                     child: _SmallToolCard(
                       title: 'Image to PDF',
                       icon: Icons.picture_as_pdf_rounded,
+                      accent: _HomeToolColors.imageToPdf,
                       onTap: () => context.push('/image-to-pdf'),
                     ),
                   ),
@@ -114,14 +175,14 @@ class _HighlightToolCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final bool useGradientIcon;
+  final Color accent;
   final VoidCallback? onTap;
 
   const _HighlightToolCard({
     required this.title,
     required this.subtitle,
     required this.icon,
-    this.useGradientIcon = false,
+    required this.accent,
     this.onTap,
   });
 
@@ -137,9 +198,14 @@ class _HighlightToolCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark ? cs.surfaceContainerLow : cs.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: cs.outlineVariant.withOpacity(isDark ? 0.3 : 0.5),
-          ),
+          // border: Border.all(color: accent.withOpacity(isDark ? 0.35 : 0.25)),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withAlpha(30),
+              blurRadius: 8,
+              offset: const Offset(1, 3),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -147,19 +213,17 @@ class _HighlightToolCard extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                gradient: useGradientIcon ? AppColors.primaryGradient : null,
-                color: useGradientIcon
-                    ? null
-                    : (isDark
-                          ? cs.surfaceContainerHigh
-                          : AppColors.surfaceContainer),
+                gradient: _HomeToolColors.gradientFor(accent),
                 borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: accent.withOpacity(0.35),
+                    blurRadius: 10,
+                    offset: const Offset(1, 3),
+                  ),
+                ],
               ),
-              child: Icon(
-                icon,
-                color: useGradientIcon ? Colors.white : cs.primary,
-                size: 28,
-              ),
+              child: Icon(icon, color: Colors.white, size: 28),
             ),
             const SizedBox(width: AppTheme.spaceMd),
             Expanded(
@@ -192,7 +256,7 @@ class _HighlightToolCard extends StatelessWidget {
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: cs.onSurfaceVariant.withOpacity(0.5),
+              color: accent.withOpacity(0.7),
               size: 22,
             ),
           ],
@@ -206,9 +270,15 @@ class _HighlightToolCard extends StatelessWidget {
 class _SmallToolCard extends StatelessWidget {
   final String title;
   final IconData icon;
+  final Color accent;
   final VoidCallback? onTap;
 
-  const _SmallToolCard({required this.title, required this.icon, this.onTap});
+  const _SmallToolCard({
+    required this.title,
+    required this.icon,
+    required this.accent,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -222,9 +292,14 @@ class _SmallToolCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark ? cs.surfaceContainerLow : cs.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: cs.outlineVariant.withOpacity(isDark ? 0.3 : 0.5),
-          ),
+          // border: Border.all(color: accent.withOpacity(isDark ? 0.35 : 0.22)),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withAlpha(30),
+              blurRadius: 8,
+              offset: const Offset(1, 3),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,12 +308,10 @@ class _SmallToolCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: isDark
-                    ? cs.surfaceContainerHigh
-                    : AppColors.surfaceContainer,
+                color: accent.withOpacity(isDark ? 0.22 : 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: cs.primary, size: 24),
+              child: Icon(icon, color: accent, size: 24),
             ),
             const SizedBox(height: AppTheme.spaceSm),
             Text(
