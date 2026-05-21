@@ -33,8 +33,10 @@ class ResultScreen extends StatefulWidget {
 
 class _ResultScreenState extends State<ResultScreen> {
   bool _autoSaved = false;
+  bool _saveFailed = false;
   String _savedPath = '';
   bool _isSaving = false;
+  String _errorMessage = '';
 
   OutputFormat get _outputFormat {
     switch (widget.outputFormat.toLowerCase()) {
@@ -55,9 +57,21 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Future<void> _autoSave() async {
+    setState(() {
+      _saveFailed = false;
+      _autoSaved = false;
+    });
     try {
       final file = File(widget.filePath);
-      if (!file.existsSync()) return;
+      if (!file.existsSync()) {
+        if (mounted) {
+          setState(() {
+            _saveFailed = true;
+            _errorMessage = 'Source file not found';
+          });
+        }
+        return;
+      }
 
       final saved = await FileService.saveToRedImage(
         file,
@@ -68,12 +82,17 @@ class _ResultScreenState extends State<ResultScreen> {
       if (mounted) {
         setState(() {
           _autoSaved = true;
+          _saveFailed = false;
           _savedPath = saved.path;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _autoSaved = false);
+        setState(() {
+          _saveFailed = true;
+          _autoSaved = false;
+          _errorMessage = e.toString();
+        });
       }
     }
   }
@@ -154,9 +173,9 @@ class _ResultScreenState extends State<ResultScreen> {
 
               // ── Title ───────────────────────────────────────────
               Text(
-                'Saved Successfully',
+                _saveFailed ? 'Save Failed' : 'Saved Successfully',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  color: cs.onSurface,
+                  color: _saveFailed ? cs.error : cs.onSurface,
                   fontSize: 28,
                 ),
               ),
@@ -186,7 +205,7 @@ class _ResultScreenState extends State<ResultScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Auto-saved to Downloads/RedImage/',
+                              'Saved to device & Downloads/RedImage/',
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 13,
@@ -197,35 +216,70 @@ class _ResultScreenState extends State<ResultScreen> {
                           ],
                         ),
                       )
-                    : Container(
-                        key: const ValueKey('saving'),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: cs.primary,
+                    : _saveFailed
+                        ? GestureDetector(
+                            onTap: _autoSave,
+                            child: Container(
+                              key: const ValueKey('failed'),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: cs.error.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.error_rounded,
+                                    color: cs.error,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Save failed — tap to retry',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: cs.error,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Saving…',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 13,
-                                color: cs.onSurfaceVariant,
-                              ),
+                          )
+                        : Container(
+                            key: const ValueKey('saving'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
                             ),
-                          ],
-                        ),
-                      ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: cs.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Saving…',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 13,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
               ),
               const SizedBox(height: AppTheme.spaceLg),
 

@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -80,35 +83,101 @@ class SavedFileMeta {
 }
 
 /// Service for saving, tracking, and sharing files.
+///
+/// **Saving strategy (Play Store safe — no dangerous permissions on Android 10+):**
+///
+/// 1. Files are always saved to the app's private documents directory first.
+///    This works on ALL Android versions without any permissions.
+///
+/// 2. A copy is also placed in `Downloads/RedImage/` for file manager visibility:
+///    - Android 10+ (API 29+): via **MediaStore API** — zero permissions needed,
+///      files are auto-indexed and immediately visible in the system file manager.
+///    - Android 9 and below: via direct file I/O + **MediaScanner** — needs only
+///      `WRITE_EXTERNAL_STORAGE` (declared with `maxSdkVersion="28"`).
+///
+/// 3. SharedPreferences tracks the **internal** path for the "My Files" screen,
+///    ensuring reliable access regardless of Android version or permissions.
 class FileService {
   static const _prefsKey = 'saved_files_v1';
 
-  /// Get the RedImage output directory on device storage.
+  /// Platform channel for native file operations (MediaStore, MediaScanner).
+  static const _channel = MethodChannel('com.redpdf.redimg/media_scanner');
+
+  /// App's private RedImage directory — always accessible, no permissions needed.
   static Future<Directory> get _outputDir async {
-    // On Android, use /storage/emulated/0/Download/RedImage
-    // On other platforms, fallback to app documents
-    if (Platform.isAndroid) {
-      final dir = Directory('/storage/emulated/0/Download/RedImage');
-      if (!await dir.exists()) {
-        await dir.create(recursive: true);
-      }
-      return dir;
-    }
-    // Fallback for iOS / desktop
-    final dir = Directory(
-      path.join(
-        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.',
-        'Downloads',
-        'RedImage',
-      ),
-    );
+    final appDir = await getApplicationDocumentsDirectory();
+    final dir = Directory(path.join(appDir.path, 'RedImage'));
     if (!await dir.exists()) {
       await dir.create(recursive: true);
     }
     return dir;
   }
 
-  /// Save a processed file to Downloads/RedImage/ and record it in SharedPreferences.
+  /// Determine MIME type from file extension.
+  static String _getMimeType(String filePath) {
+    final ext = path.extension(filePath).toLowerCase();
+    switch (ext) {
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.png':
+        return 'image/png';
+      case '.webp':
+        return 'image/webp';
+      case '.pdf':
+        return 'application/pdf';
+      case '.bmp':
+        return 'image/bmp';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  /// Request WRITE_EXTERNAL_STORAGE for Android 9 and below.
+  /// On Android 10+, this is a no-op since MediaStore needs no permissions.
+  static Future<bool> _ensureStoragePermission() async {
+    if (!Platform.isAndroid) return true;
+
+    final status = await Permission.storage.status;
+    if (status.isGranted) return true;
+
+    // On Android 10+, permission.storage may be permanently denied
+    // because it's not applicable. MediaStore handles saving without it.
+    if (status.isPermanentlyDenied) return false;
+
+    final result = await Permission.storage.request();
+    return result.isGranted;
+  }
+
+  /// Copy a saved file to the public Downloads/RedImage/ folder so it
+  /// appears in the user's system file manager.
+  ///
+  /// Uses MediaStore on Android 10+ (no permissions), and direct I/O +
+  /// MediaScanner on Android 9 and below (WRITE_EXTERNAL_STORAGE needed).
+  ///
+  /// If this fails, the internal copy is still saved — this is best-effort.
+  static Future<void> _copyToPublicDownloads(File file, String fileName) async {
+    if (!Platform.isAndroid) return;
+
+    try {
+      // On Android < 10, request WRITE_EXTERNAL_STORAGE first
+      await _ensureStoragePermission();
+
+      await _channel.invokeMethod('saveToDownloads', {
+        'sourcePath': file.path,
+        'fileName': fileName,
+        'mimeType': _getMimeType(fileName),
+        'subDir': 'RedImage',
+      });
+    } catch (e) {
+      // Best-effort: internal copy is still saved regardless.
+      // This can fail on Android 9 if user denies storage permission,
+      // but the file is still accessible within the app.
+    }
+  }
+
+  /// Save a processed file to the app's private storage AND make it
+  /// visible in the device's file manager (Downloads/RedImage/).
   ///
   /// If [outputFormat] is provided, the image will be converted to that format
   /// before saving (PNG, JPEG, or PDF).
@@ -184,7 +253,11 @@ class FileService {
       savedFile = await file.copy(destPath);
     }
 
-    // Record in SharedPreferences
+    // Copy to public Downloads/RedImage/ for file manager visibility.
+    // This is best-effort — the internal copy above is the reliable one.
+    await _copyToPublicDownloads(savedFile, destName);
+
+    // Record in SharedPreferences (using the internal path for reliability)
     final meta = SavedFileMeta(
       filePath: savedFile.path,
       name: destName,

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../services/file_service.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/app_colors.dart';
