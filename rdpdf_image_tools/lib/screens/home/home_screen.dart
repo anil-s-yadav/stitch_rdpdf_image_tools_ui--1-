@@ -29,7 +29,7 @@ class HomeScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? null : AppColors.surfaceContainerHigh,
+      backgroundColor: isDark ? null : AppColors.surfaceContainerLow,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppTheme.containerMargin),
@@ -66,7 +66,6 @@ class HomeScreen extends StatelessWidget {
                           text: 'IMG ',
                           style: Theme.of(context).textTheme.displayMedium
                               ?.copyWith(
-                                color: AppColors.darkBackground,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.5,
                               ),

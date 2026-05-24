@@ -123,9 +123,19 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: _pickImages,
-                      icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('Add More'),
+                      onPressed: () => _removeImage(1),
+                      icon: Icon(
+                        Icons.delete_sweep_rounded,
+                        size: 16,
+                        color: Colors.red.shade700,
+                      ),
+                      label: Text(
+                        'Clear All',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ],
                 ),
