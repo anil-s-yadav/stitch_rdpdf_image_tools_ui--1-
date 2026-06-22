@@ -36,8 +36,8 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
   int? _targetKB;
 
   final GlobalKey _previewKey = GlobalKey();
-  final _photoState = _ItemState(position: const Offset(60, 20), scale: 1.0);
-  final _sigState = _ItemState(position: const Offset(90, 220), scale: 1.0);
+  final _photoState = _ItemState(position: const Offset(10, 10), scale: 1.0);
+  final _sigState = _ItemState(position: const Offset(10, 310), scale: 1.0);
 
   @override
   void dispose() {
@@ -95,6 +95,7 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
           final compressedFile = await ImageProcessingService.resizeToTargetKB(
             inputPath: outFile.path,
             targetKB: _targetKB!,
+            isPng: _outputFormat == OutputFormat.png,
           );
           if (compressedFile != null) {
             // Delete the uncompressed file and use the compressed one
@@ -137,8 +138,9 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
     IconData icon,
     String text,
     double width,
-    double height,
-  ) {
+    double height, {
+    double iconSize = 40,
+  }) {
     return Container(
       width: width,
       height: height,
@@ -146,7 +148,7 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 40, color: Colors.grey.shade400),
+          Icon(icon, size: iconSize, color: Colors.grey.shade400),
           const SizedBox(height: 4),
           Text(
             text,
@@ -165,9 +167,19 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
     File? file,
     _ItemState state,
     Widget placeholder,
-  ) {
+    double width,
+    double height, {
+    required bool isSignature,
+  }) {
     final content = file != null
-        ? Image.file(file, fit: BoxFit.contain)
+        ? SizedBox(
+            width: width,
+            height: height,
+            child: Image.file(
+              file,
+              fit: isSignature ? BoxFit.contain : BoxFit.cover,
+            ),
+          )
         : placeholder;
 
     return Positioned(
@@ -187,7 +199,8 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
             });
           },
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 180, maxHeight: 180),
+            width: width,
+            height: height,
             decoration: BoxDecoration(
               border: _isGenerating
                   ? null
@@ -268,7 +281,7 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
               const SizedBox(height: AppTheme.spaceSm),
               Text(
                 'Upload your portrait photo and handwritten signature to generate a single standardized document.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -392,9 +405,13 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
                                     _buildPlaceholder(
                                       Icons.person_rounded,
                                       'Photo Area',
-                                      140,
-                                      180,
+                                      280,
+                                      290,
+                                      iconSize: 48,
                                     ),
+                                    280,
+                                    290,
+                                    isSignature: false,
                                   ),
                                   _buildInteractiveItem(
                                     _signature,
@@ -402,9 +419,13 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
                                     _buildPlaceholder(
                                       Icons.draw_rounded,
                                       'Signature Area',
-                                      120,
-                                      60,
+                                      280,
+                                      80,
+                                      iconSize: 24,
                                     ),
+                                    280,
+                                    80,
+                                    isSignature: true,
                                   ),
                                 ],
                               ),

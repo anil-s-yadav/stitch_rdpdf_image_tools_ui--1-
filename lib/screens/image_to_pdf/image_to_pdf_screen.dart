@@ -18,6 +18,13 @@ class ImageToPdfScreen extends StatefulWidget {
 class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
   final List<File> _images = [];
   bool _isGenerating = false;
+  final _nameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImages() async {
     final picker = ImagePicker();
@@ -31,6 +38,10 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
 
   void _removeImage(int index) {
     setState(() => _images.removeAt(index));
+  }
+
+  void _clearAll() {
+    setState(() => _images.clear());
   }
 
   void _reorderImages(int oldIndex, int newIndex) {
@@ -51,8 +62,24 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
 
     setState(() => _isGenerating = true);
 
+    final enteredName = _nameController.text.trim();
+    final String finalPdfName;
+    if (enteredName.isNotEmpty) {
+      finalPdfName = enteredName;
+    } else {
+      final now = DateTime.now();
+      final yyyy = now.year.toString();
+      final mm = now.month.toString().padLeft(2, '0');
+      final dd = now.day.toString().padLeft(2, '0');
+      final hh = now.hour.toString().padLeft(2, '0');
+      final min = now.minute.toString().padLeft(2, '0');
+      final ss = now.second.toString().padLeft(2, '0');
+      finalPdfName = 'REDIMG_$yyyy$mm${dd}_$hh$min$ss';
+    }
+
     final result = await PdfService.imagesToPdf(
       imagePaths: _images.map((f) => f.path).toList(),
+      outputFileName: finalPdfName,
     );
 
     setState(() => _isGenerating = false);
@@ -70,6 +97,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
           'format': 'PDF',
           'toolName': 'Image to PDF',
           'outputFormat': 'pdf',
+          'fileName': finalPdfName,
         },
       );
     }
@@ -123,7 +151,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => _removeImage(1),
+                      onPressed: _clearAll,
                       icon: Icon(
                         Icons.delete_sweep_rounded,
                         size: 16,
@@ -164,6 +192,49 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                       onRemove: () => _removeImage(index),
                     );
                   },
+                ),
+                const SizedBox(height: AppTheme.spaceLg),
+                // ── Document Name (Optional) ───────────────
+                Text(
+                  'Document Name (Optional)',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  ),
+                  child: TextField(
+                    controller: _nameController,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      hintText: 'e.g. MyDocument',
+                      hintStyle: TextStyle(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withOpacity(0.6),
+                      ),
+                      suffixText: '.pdf',
+                      suffixStyle: TextStyle(
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                    ),
+                  ),
                 ),
               ],
 

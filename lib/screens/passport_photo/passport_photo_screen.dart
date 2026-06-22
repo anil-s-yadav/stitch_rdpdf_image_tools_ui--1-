@@ -21,6 +21,16 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
   int _selectedPresetIndex = 0;
   bool _isProcessing = false;
   OutputFormat _outputFormat = OutputFormat.png;
+  int _bgIndex = 0; // 0 = White, 1 = Black, 2 = Stretch
+
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _uploadSectionKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -41,11 +51,22 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
     setState(() => _isProcessing = true);
 
     final preset = PhotoPreset.presets[_selectedPresetIndex];
+    
+    ResizeFitType fitType = ResizeFitType.fitBackground;
+    Color bgColor = Colors.white;
+    if (_bgIndex == 1) {
+      bgColor = Colors.black;
+    } else if (_bgIndex == 2) {
+      fitType = ResizeFitType.stretch;
+    }
+
     final result = await ImageProcessingService.createPassportPhoto(
       inputPath: _selectedImage!.path,
       widthMm: preset.widthMm,
       heightMm: preset.heightMm,
       targetKB: preset.targetKB,
+      fitType: fitType,
+      backgroundColor: bgColor,
     );
 
     setState(() => _isProcessing = false);
@@ -82,6 +103,7 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.all(AppTheme.containerMargin),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +142,20 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
                   child: _PresetCard(
                     preset: preset,
                     isSelected: isSelected,
-                    onTap: () => setState(() => _selectedPresetIndex = index),
+                    onTap: () {
+                      setState(() => _selectedPresetIndex = index);
+                      // Scroll to upload area after build
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        final context = _uploadSectionKey.currentContext;
+                        if (context != null) {
+                          Scrollable.ensureVisible(
+                            context,
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeInOut,
+                          );
+                        }
+                      });
+                    },
                   ),
                 );
               }),
@@ -128,52 +163,54 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
               const SizedBox(height: AppTheme.spaceLg),
 
               // ── Upload Area ─────────────────────────────────────
-              UploadArea(
-                onTap: _pickImage,
-                icon: Icons.cloud_upload_rounded,
-                title: 'Drag & Drop Image',
-                subtitle: 'or click to browse files',
-                hasFile: _selectedImage != null,
-                preview: _selectedImage != null
-                    ? Stack(
-                        children: [
-                          Center(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radiusMd,
-                              ),
-                              child: Image.file(
-                                _selectedImage!,
-                                width: 300,
-                                height: 300,
-
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: GestureDetector(
-                              onTap: () =>
-                                  setState(() => _selectedImage = null),
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(8),
+              Container(
+                key: _uploadSectionKey,
+                child: UploadArea(
+                  onTap: _pickImage,
+                  icon: Icons.cloud_upload_rounded,
+                  title: 'Drag & Drop Image',
+                  subtitle: 'or click to browse files',
+                  hasFile: _selectedImage != null,
+                  preview: _selectedImage != null
+                      ? Stack(
+                          children: [
+                            Center(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusMd,
                                 ),
-                                child: const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: 18,
+                                child: Image.file(
+                                  _selectedImage!,
+                                  width: 300,
+                                  height: 300,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      )
-                    : null,
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: GestureDetector(
+                                onTap: () =>
+                                    setState(() => _selectedImage = null),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : null,
+                ),
               ),
 
               if (_selectedImage == null) ...[
@@ -226,6 +263,116 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
                       icon: Icons.image_rounded,
                       label: 'Output Format',
                       value: 'JPEG',
+                    ),
+                    const SizedBox(height: AppTheme.spaceSm),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusDefault),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.palette_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Background',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () => setState(() => _bgIndex = 0),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: _bgIndex == 0
+                                          ? Theme.of(context).colorScheme.primaryContainer
+                                          : Colors.grey.shade300,
+                                      width: _bgIndex == 0 ? 2 : 1,
+                                    ),
+                                  ),
+                                  child: _bgIndex == 0
+                                      ? Icon(
+                                          Icons.check,
+                                          size: 16,
+                                          color: Theme.of(context).colorScheme.primaryContainer,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => setState(() => _bgIndex = 1),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: _bgIndex == 1
+                                          ? Theme.of(context).colorScheme.primaryContainer
+                                          : Colors.transparent,
+                                      width: _bgIndex == 1 ? 2 : 0,
+                                    ),
+                                  ),
+                                  child: _bgIndex == 1
+                                      ? const Icon(
+                                          Icons.check,
+                                          size: 16,
+                                          color: Colors.white,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => setState(() => _bgIndex = 2),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: _bgIndex == 2
+                                        ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+                                        : Theme.of(context).colorScheme.surfaceContainerHigh,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: _bgIndex == 2
+                                          ? Theme.of(context).colorScheme.primaryContainer
+                                          : Colors.transparent,
+                                      width: _bgIndex == 2 ? 2 : 0,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.fit_screen_rounded,
+                                    size: 16,
+                                    color: _bgIndex == 2
+                                        ? Theme.of(context).colorScheme.primaryContainer
+                                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

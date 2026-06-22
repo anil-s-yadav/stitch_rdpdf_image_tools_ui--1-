@@ -23,23 +23,20 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/home',
           name: 'home',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: HomeScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: HomeScreen()),
         ),
         GoRoute(
           path: '/tools',
           name: 'tools',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: MyFilesScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: MyFilesScreen()),
         ),
         GoRoute(
           path: '/settings',
           name: 'settings',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: SettingsScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: SettingsScreen()),
         ),
       ],
     ),
@@ -106,6 +103,7 @@ final GoRouter appRouter = GoRouter(
             originalSize: extra['originalSize'] as String? ?? '',
             toolName: extra['toolName'] as String? ?? '',
             outputFormat: extra['outputFormat'] as String? ?? 'png',
+            fileName: extra['fileName'] as String?,
           ),
           transitionsBuilder: _slideTransition,
         );
@@ -124,10 +122,7 @@ Widget _slideTransition(
     position: Tween<Offset>(
       begin: const Offset(1, 0),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOutCubic,
-    )),
+    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
     child: child,
   );
 }

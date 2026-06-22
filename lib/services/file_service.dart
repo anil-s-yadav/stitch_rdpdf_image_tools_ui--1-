@@ -9,6 +9,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:open_filex/open_filex.dart';
 
 /// Supported output formats for image processing.
 enum OutputFormat { png, jpeg, pdf }
@@ -46,7 +47,8 @@ class SavedFileMeta {
     toolName: json['toolName'] as String? ?? '',
     format: json['format'] as String? ?? '',
     sizeBytes: json['sizeBytes'] as int? ?? 0,
-    savedAt: DateTime.tryParse(json['savedAt'] as String? ?? '') ?? DateTime.now(),
+    savedAt:
+        DateTime.tryParse(json['savedAt'] as String? ?? '') ?? DateTime.now(),
   );
 
   String get formattedSize {
@@ -181,6 +183,21 @@ class FileService {
   ///
   /// If [outputFormat] is provided, the image will be converted to that format
   /// before saving (PNG, JPEG, or PDF).
+  static String _formatTimestamp(DateTime dt) {
+    final yyyy = dt.year.toString();
+    final mm = dt.month.toString().padLeft(2, '0');
+    final dd = dt.day.toString().padLeft(2, '0');
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final min = dt.minute.toString().padLeft(2, '0');
+    final ss = dt.second.toString().padLeft(2, '0');
+    return '$yyyy$mm${dd}_$hh$min$ss';
+  }
+
+  /// Save a processed file to the app's private storage AND make it
+  /// visible in the device's file manager (Downloads/RedImage/).
+  ///
+  /// If [outputFormat] is provided, the image will be converted to that format
+  /// before saving (PNG, JPEG, or PDF).
   static Future<File> saveToRedImage(
     File file, {
     String? fileName,
@@ -188,9 +205,6 @@ class FileService {
     OutputFormat? outputFormat,
   }) async {
     final dir = await _outputDir;
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final baseName = fileName ??
-        path.basenameWithoutExtension(file.path);
 
     // Determine target extension
     String ext;
@@ -208,20 +222,45 @@ class FileService {
       if (ext.isEmpty) ext = '.png';
     }
 
-    final destName = '${baseName}_$timestamp$ext';
-    final destPath = path.join(dir.path, destName);
+    String destName;
+    if (fileName != null && fileName.trim().isNotEmpty) {
+      final base = path.basenameWithoutExtension(fileName.trim());
+      destName = '$base$ext';
+    } else {
+      final now = DateTime.now();
+      destName = 'REDIMG_${_formatTimestamp(now)}$ext';
+    }
+
+    var destPath = path.join(dir.path, destName);
+    var finalFile = File(destPath);
+
+    // If file already exists, we append a timestamp suffix to prevent overwriting
+    if (await finalFile.exists()) {
+      final base = path.basenameWithoutExtension(destName);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      destName = '${base}_$timestamp$ext';
+      destPath = path.join(dir.path, destName);
+      finalFile = File(destPath);
+    }
 
     File savedFile;
 
     // Convert format if needed
     final sourceExt = path.extension(file.path).toLowerCase();
-    final isSourceImage = ['.jpg', '.jpeg', '.png', '.webp', '.bmp']
-        .contains(sourceExt);
+    final isSourceImage = [
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.webp',
+      '.bmp',
+    ].contains(sourceExt);
 
     if (outputFormat == OutputFormat.pdf && isSourceImage) {
       // Convert image → PDF
       savedFile = await _imageToPdf(file, destPath);
-    } else if (outputFormat == OutputFormat.png && sourceExt != '.png' && isSourceImage) {
+    } else if (outputFormat == OutputFormat.png &&
+        sourceExt != '.png' &&
+        isSourceImage) {
       // Convert → PNG
       final result = await FlutterImageCompress.compressWithFile(
         file.path,
@@ -234,8 +273,10 @@ class FileService {
       } else {
         savedFile = await file.copy(destPath);
       }
-    } else if (outputFormat == OutputFormat.jpeg && sourceExt != '.jpg' &&
-        sourceExt != '.jpeg' && isSourceImage) {
+    } else if (outputFormat == OutputFormat.jpeg &&
+        sourceExt != '.jpg' &&
+        sourceExt != '.jpeg' &&
+        isSourceImage) {
       // Convert → JPEG
       final result = await FlutterImageCompress.compressWithFile(
         file.path,
@@ -281,9 +322,8 @@ class FileService {
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(0),
-        build: (context) => pw.Center(
-          child: pw.Image(image, fit: pw.BoxFit.contain),
-        ),
+        build: (context) =>
+            pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain)),
       ),
     );
 
@@ -348,10 +388,7 @@ class FileService {
 
   /// Share a file using the system share sheet.
   static Future<void> shareFile(String filePath, {String? subject}) async {
-    await Share.shareXFiles(
-      [XFile(filePath)],
-      subject: subject,
-    );
+    await Share.shareXFiles([XFile(filePath)], subject: subject);
   }
 
   /// Get file info (size, name, etc.)
@@ -366,5 +403,10 @@ class FileService {
       'size': stat.size,
       'modified': stat.modified,
     };
+  }
+
+  /// Open a file in an external application.
+  static Future<OpenResult> openFile(String filePath) async {
+    return await OpenFilex.open(filePath);
   }
 }

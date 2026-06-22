@@ -405,3 +405,173 @@ class FormatPicker extends StatelessWidget {
     );
   }
 }
+
+/// A draggable split-screen before/after image comparison slider.
+class ImageComparisonSlider extends StatefulWidget {
+  final Widget original;
+  final Widget preview;
+  final double height;
+
+  const ImageComparisonSlider({
+    super.key,
+    required this.original,
+    required this.preview,
+    this.height = 220,
+  });
+
+  @override
+  State<ImageComparisonSlider> createState() => _ImageComparisonSliderState();
+}
+
+class _ImageComparisonSliderState extends State<ImageComparisonSlider> {
+  double _sliderPosition = 0.5;
+
+  void _updatePosition(Offset globalPosition, double width) {
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox != null) {
+      final localPos = renderBox.globalToLocal(globalPosition);
+      setState(() {
+        _sliderPosition = (localPos.dx / width).clamp(0.0, 1.0);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: widget.height,
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTheme.radiusDefault),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanStart: (details) => _updatePosition(details.globalPosition, width),
+            onPanUpdate: (details) => _updatePosition(details.globalPosition, width),
+            onTapDown: (details) => _updatePosition(details.globalPosition, width),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 1. Preview image (underneath/right side)
+                widget.preview,
+
+                // 2. Original image (on top, clipped to show only the left part)
+                ClipRect(
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    widthFactor: _sliderPosition,
+                    child: SizedBox(
+                      width: width,
+                      height: widget.height,
+                      child: widget.original,
+                    ),
+                  ),
+                ),
+
+                // 3. Original Label (top-left)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'ORIGINAL',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 4. Preview Label (top-right)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'PREVIEW',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 5. Divider line
+                Positioned(
+                  left: width * _sliderPosition - 1,
+                  top: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 2,
+                    color: Colors.white,
+                  ),
+                ),
+
+                // 6. Handle circle with chevrons
+                Positioned(
+                  left: width * _sliderPosition - 16,
+                  top: widget.height / 2 - 16,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context).shadowColor.withOpacity(0.15),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chevron_left_rounded,
+                          size: 14,
+                          color: Colors.black87,
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 14,
+                          color: Colors.black87,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

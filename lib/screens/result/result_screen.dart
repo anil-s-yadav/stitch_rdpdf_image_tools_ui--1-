@@ -15,6 +15,7 @@ class ResultScreen extends StatefulWidget {
   final String originalSize;
   final String toolName;
   final String outputFormat; // 'png', 'jpeg', or 'pdf'
+  final String? fileName;
 
   const ResultScreen({
     super.key,
@@ -25,6 +26,7 @@ class ResultScreen extends StatefulWidget {
     this.originalSize = '',
     this.toolName = '',
     this.outputFormat = 'png',
+    this.fileName,
   });
 
   @override
@@ -75,6 +77,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
       final saved = await FileService.saveToRedImage(
         file,
+        fileName: widget.fileName,
         toolName: widget.toolName,
         outputFormat: _outputFormat,
       );
@@ -105,6 +108,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
       final saved = await FileService.saveToRedImage(
         file,
+        fileName: widget.fileName,
         toolName: widget.toolName,
         outputFormat: _outputFormat,
       );

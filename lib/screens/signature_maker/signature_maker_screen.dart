@@ -71,6 +71,7 @@ class _SignatureMakerScreenState extends State<SignatureMakerScreen> {
           outputFile = await ImageProcessingService.resizeToTargetKB(
             inputPath: _uploadedSignature!.path,
             targetKB: targetKB,
+            isPng: _outputFormat == OutputFormat.png,
           );
         } else {
           outputFile = _uploadedSignature;
@@ -97,6 +98,7 @@ class _SignatureMakerScreenState extends State<SignatureMakerScreen> {
             final resized = await ImageProcessingService.resizeToTargetKB(
               inputPath: filePath,
               targetKB: targetKB,
+              isPng: _outputFormat == OutputFormat.png,
             );
             if (resized != null) outputFile = resized;
           }

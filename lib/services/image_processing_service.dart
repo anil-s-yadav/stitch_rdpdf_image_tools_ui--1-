@@ -1,18 +1,192 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart' show Color, debugPrint;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
+/// Fit types for dimension-based resizing.
+enum ResizeFitType { stretch, fitBackground, cropFill }
+
 /// Service handling all image processing operations.
 class ImageProcessingService {
+  /// Resize an image to custom dimensions (width & height in pixels)
+  /// with options for stretch, padding (background color), or crop/fill.
+  static Future<File?> resizeDimensions({
+    required String inputPath,
+    required int targetWidth,
+    required int targetHeight,
+    required ResizeFitType fitType,
+    required Color backgroundColor,
+    required int quality,
+    required bool isPng,
+  }) async {
+    final inputFile = File(inputPath);
+    if (!await inputFile.exists()) return null;
+
+    try {
+      final bytes = await inputFile.readAsBytes();
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      final originalImage = frame.image;
+
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+
+      // 1. Fill background (defaults to transparent/white depending on input)
+      final bgPaint = ui.Paint()..color = backgroundColor;
+      canvas.drawRect(
+        ui.Rect.fromLTWH(0, 0, targetWidth.toDouble(), targetHeight.toDouble()),
+        bgPaint,
+      );
+
+      final srcRect = ui.Rect.fromLTWH(
+        0,
+        0,
+        originalImage.width.toDouble(),
+        originalImage.height.toDouble(),
+      );
+
+      ui.Rect dstRect;
+
+      switch (fitType) {
+        case ResizeFitType.stretch:
+          dstRect = ui.Rect.fromLTWH(
+            0,
+            0,
+            targetWidth.toDouble(),
+            targetHeight.toDouble(),
+          );
+          break;
+
+        case ResizeFitType.fitBackground:
+          final imageRatio = originalImage.width / originalImage.height;
+          final targetRatio = targetWidth / targetHeight;
+
+          double destWidth = targetWidth.toDouble();
+          double destHeight = targetHeight.toDouble();
+
+          if (imageRatio > targetRatio) {
+            // Image is wider than target aspect ratio
+            destWidth = targetWidth.toDouble();
+            destHeight = targetWidth / imageRatio;
+          } else {
+            // Image is taller than target aspect ratio
+            destHeight = targetHeight.toDouble();
+            destWidth = targetHeight * imageRatio;
+          }
+
+          final left = (targetWidth - destWidth) / 2;
+          final top = (targetHeight - destHeight) / 2;
+          dstRect = ui.Rect.fromLTWH(left, top, destWidth, destHeight);
+          break;
+
+        case ResizeFitType.cropFill:
+          final imageRatio = originalImage.width / originalImage.height;
+          final targetRatio = targetWidth / targetHeight;
+
+          double destWidth = targetWidth.toDouble();
+          double destHeight = targetHeight.toDouble();
+
+          if (imageRatio > targetRatio) {
+            // Image is wider than target aspect ratio, scale by height
+            destWidth = targetHeight * imageRatio;
+            destHeight = targetHeight.toDouble();
+          } else {
+            // Image is taller than target aspect ratio, scale by width
+            destWidth = targetWidth.toDouble();
+            destHeight = targetWidth / imageRatio;
+          }
+
+          final left = (targetWidth - destWidth) / 2;
+          final top = (targetHeight - destHeight) / 2;
+          dstRect = ui.Rect.fromLTWH(left, top, destWidth, destHeight);
+          break;
+      }
+
+      final paint = ui.Paint()..filterQuality = ui.FilterQuality.high;
+
+      if (fitType == ResizeFitType.cropFill) {
+        canvas.save();
+        canvas.clipRect(
+          ui.Rect.fromLTWH(
+            0,
+            0,
+            targetWidth.toDouble(),
+            targetHeight.toDouble(),
+          ),
+        );
+        canvas.drawImageRect(originalImage, srcRect, dstRect, paint);
+        canvas.restore();
+      } else {
+        canvas.drawImageRect(originalImage, srcRect, dstRect, paint);
+      }
+
+      final picture = recorder.endRecording();
+      final resizedImage = await picture.toImage(targetWidth, targetHeight);
+
+      final byteData = await resizedImage.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      if (byteData == null) return null;
+      final pngBytes = byteData.buffer.asUint8List();
+
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = path.join(
+        tempDir.path,
+        'temp_resized_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      final tempFile = File(tempPath);
+      await tempFile.writeAsBytes(pngBytes);
+
+      final outPath = await _outputPath('resized_dimensions');
+      final outFile = File(outPath);
+
+      if (isPng) {
+        final compressedBytes = await FlutterImageCompress.compressWithFile(
+          tempPath,
+          quality: quality,
+          format: CompressFormat.png,
+        );
+        if (compressedBytes != null) {
+          await outFile.writeAsBytes(compressedBytes);
+        } else {
+          await tempFile.copy(outPath);
+        }
+      } else {
+        final compressedBytes = await FlutterImageCompress.compressWithFile(
+          tempPath,
+          quality: quality,
+          format: CompressFormat.jpeg,
+        );
+        if (compressedBytes != null) {
+          await outFile.writeAsBytes(compressedBytes);
+        } else {
+          return null;
+        }
+      }
+
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
+
+      return outFile;
+    } catch (e) {
+      debugPrint('Error resizing dimensions: $e');
+      return null;
+    }
+  }
+
   /// Resize an image to be under [targetKB] kilobytes.
   ///
-  /// Uses iterative binary-search quality reduction to reach the target
+  /// Uses iterative binary-search quality/scale reduction to reach the target
   /// size as accurately as possible while maximizing visual fidelity.
   static Future<File?> resizeToTargetKB({
     required String inputPath,
     required int targetKB,
+    bool isPng = false,
   }) async {
     final inputFile = File(inputPath);
     if (!await inputFile.exists()) return null;
@@ -22,63 +196,109 @@ class ImageProcessingService {
 
     // Already under target
     if (inputBytes <= targetBytes) {
-      final outPath = await _outputPath('resized');
+      final outPath = await _outputPath('resized', isPng: isPng);
       await inputFile.copy(outPath);
       return File(outPath);
     }
 
-    // Binary search for the best quality value
-    int lo = 1;
-    int hi = 100;
+    // Decode only image bounds/dimensions first for accurate scaling
+    final bytes = await inputFile.readAsBytes();
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final originalImage = frame.image;
+    final int origWidth = originalImage.width;
+    final int origHeight = originalImage.height;
+
     Uint8List? bestResult;
 
-    while (lo <= hi) {
-      final mid = (lo + hi) ~/ 2;
+    if (isPng) {
+      // PNG uses lossless compression where quality has minimal impact.
+      // We must scale down dimensions to reach target size.
+      double lo = 0.05;
+      double hi = 1.0;
+      
+      // Perform 6 binary search steps on scale factor
+      for (int i = 0; i < 6; i++) {
+        final mid = (lo + hi) / 2;
+        final targetW = (origWidth * mid).toInt().clamp(1, origWidth);
+        final targetH = (origHeight * mid).toInt().clamp(1, origHeight);
 
-      // Also scale dimensions if quality alone isn't enough
-      double scale = 1.0;
-      if (mid < 20) {
-        scale = 0.5 + (mid / 20) * 0.5; // scale 50-100%
-      }
-
-      final result = await FlutterImageCompress.compressWithFile(
-        inputPath,
-        quality: mid,
-        minWidth: (1920 * scale).toInt(),
-        minHeight: (1080 * scale).toInt(),
-        format: CompressFormat.jpeg,
-      );
-
-      if (result == null) break;
-
-      if (result.length <= targetBytes) {
-        bestResult = Uint8List.fromList(result);
-        lo = mid + 1; // Try higher quality
-      } else {
-        hi = mid - 1; // Reduce quality
-      }
-    }
-
-    // If binary search didn't find a result, try with very low quality + dimension scaling
-    if (bestResult == null) {
-      for (double scale = 0.8; scale >= 0.1; scale -= 0.1) {
         final result = await FlutterImageCompress.compressWithFile(
           inputPath,
-          quality: 1,
-          minWidth: (800 * scale).toInt(),
-          minHeight: (600 * scale).toInt(),
+          quality: 100,
+          minWidth: targetW,
+          minHeight: targetH,
+          format: CompressFormat.png,
+        );
+
+        if (result == null) break;
+
+        if (result.length <= targetBytes) {
+          bestResult = Uint8List.fromList(result);
+          lo = mid; // Try larger scale
+        } else {
+          hi = mid; // Reduce scale
+        }
+      }
+    } else {
+      // JPEG supports quality-based compression and dimension scaling.
+      int lo = 1;
+      int hi = 100;
+
+      while (lo <= hi) {
+        final mid = (lo + hi) ~/ 2;
+
+        // Scale dimensions down if quality alone isn't enough (quality < 30)
+        double scale = 1.0;
+        if (mid < 30) {
+          scale = 0.3 + (mid / 30) * 0.7; // scale 30% to 100%
+        }
+
+        final targetW = (origWidth * scale).toInt().clamp(1, origWidth);
+        final targetH = (origHeight * scale).toInt().clamp(1, origHeight);
+
+        final result = await FlutterImageCompress.compressWithFile(
+          inputPath,
+          quality: mid,
+          minWidth: targetW,
+          minHeight: targetH,
           format: CompressFormat.jpeg,
         );
-        if (result != null && result.length <= targetBytes) {
+
+        if (result == null) break;
+
+        if (result.length <= targetBytes) {
           bestResult = Uint8List.fromList(result);
-          break;
+          lo = mid + 1; // Try higher quality
+        } else {
+          hi = mid - 1; // Reduce quality
+        }
+      }
+
+      // If binary search failed, try aggressive scale-down at quality 1
+      if (bestResult == null) {
+        for (double scale = 0.8; scale >= 0.1; scale -= 0.1) {
+          final targetW = (origWidth * scale).toInt().clamp(1, origWidth);
+          final targetH = (origHeight * scale).toInt().clamp(1, origHeight);
+
+          final result = await FlutterImageCompress.compressWithFile(
+            inputPath,
+            quality: 1,
+            minWidth: targetW,
+            minHeight: targetH,
+            format: CompressFormat.jpeg,
+          );
+          if (result != null && result.length <= targetBytes) {
+            bestResult = Uint8List.fromList(result);
+            break;
+          }
         }
       }
     }
 
     if (bestResult == null) return null;
 
-    final outPath = await _outputPath('resized');
+    final outPath = await _outputPath('resized', isPng: isPng);
     final outFile = File(outPath);
     await outFile.writeAsBytes(bestResult);
     return outFile;
@@ -110,36 +330,42 @@ class ImageProcessingService {
     required int heightMm,
     int dpi = 300,
     int? targetKB,
+    ResizeFitType fitType = ResizeFitType.fitBackground,
+    Color backgroundColor = const Color(0xFFFFFFFF),
   }) async {
     final widthPx = (widthMm * dpi / 25.4).round();
     final heightPx = (heightMm * dpi / 25.4).round();
 
-    var result = await FlutterImageCompress.compressWithFile(
-      inputPath,
-      minWidth: widthPx,
-      minHeight: heightPx,
+    // Use native canvas resizeDimensions to fit, pad, or stretch correctly
+    final resized = await resizeDimensions(
+      inputPath: inputPath,
+      targetWidth: widthPx,
+      targetHeight: heightPx,
+      fitType: fitType,
+      backgroundColor: backgroundColor,
       quality: 95,
-      format: CompressFormat.jpeg,
+      isPng: false, // JPEGs are standard for passport photos
     );
 
-    if (result == null) return null;
+    if (resized == null) return null;
 
     // If a target KB is specified, further compress
     if (targetKB != null) {
-      final tempPath = await _outputPath('passport_temp');
-      final tempFile = File(tempPath);
-      await tempFile.writeAsBytes(result);
-      final resized = await resizeToTargetKB(
-        inputPath: tempPath,
+      final finalFile = await resizeToTargetKB(
+        inputPath: resized.path,
         targetKB: targetKB,
+        isPng: false,
       );
-      if (resized != null) return resized;
+      // Clean up the resized file if we generated a new compressed one
+      if (finalFile != null) {
+        if (await resized.exists()) {
+          await resized.delete();
+        }
+        return finalFile;
+      }
     }
 
-    final outPath = await _outputPath('passport');
-    final outFile = File(outPath);
-    await outFile.writeAsBytes(result);
-    return outFile;
+    return resized;
   }
 
   /// Combine a photo and signature image vertically.
@@ -174,10 +400,11 @@ class ImageProcessingService {
   }
 
   /// Generate a unique output path.
-  static Future<String> _outputPath(String prefix) async {
+  static Future<String> _outputPath(String prefix, {bool isPng = false}) async {
     final dir = await getTemporaryDirectory();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return path.join(dir.path, '${prefix}_$timestamp.jpg');
+    final ext = isPng ? 'png' : 'jpg';
+    return path.join(dir.path, '${prefix}_$timestamp.$ext');
   }
 
   /// Get the file size as a human-readable string.

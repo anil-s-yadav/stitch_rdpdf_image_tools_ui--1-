@@ -268,7 +268,7 @@ class _FileCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: onShare,
+          onTap: () => FileService.openFile(meta.filePath),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
@@ -354,9 +354,7 @@ class _FileCard extends StatelessWidget {
                       ],
                     ],
                   ),
-                ),
-
-                // Actions
+                ),                // Actions
                 PopupMenuButton<String>(
                   icon: Icon(
                     Icons.more_vert_rounded,
@@ -367,10 +365,21 @@ class _FileCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   onSelected: (value) {
+                    if (value == 'open') FileService.openFile(meta.filePath);
                     if (value == 'share') onShare();
                     if (value == 'delete') onDelete();
                   },
                   itemBuilder: (_) => [
+                    const PopupMenuItem(
+                      value: 'open',
+                      child: Row(
+                        children: [
+                          Icon(Icons.open_in_new_rounded, size: 18),
+                          SizedBox(width: 10),
+                          Text('Open'),
+                        ],
+                      ),
+                    ),
                     const PopupMenuItem(
                       value: 'share',
                       child: Row(
