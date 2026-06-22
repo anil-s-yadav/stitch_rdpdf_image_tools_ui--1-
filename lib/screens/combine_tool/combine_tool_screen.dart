@@ -57,6 +57,24 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
     if (xFile != null) setState(() => _signature = File(xFile.path));
   }
 
+  void _resetPositions() {
+    setState(() {
+      _photoState.position = const Offset(10, 10);
+      _photoState.scale = 1.0;
+      _photoState.baseScale = 1.0;
+      _sigState.position = const Offset(10, 310);
+      _sigState.scale = 1.0;
+      _sigState.baseScale = 1.0;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Positions and scales reset'),
+        duration: Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Future<void> _generateCombined() async {
     if (_photo == null || _signature == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -354,6 +372,15 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
                               ).colorScheme.primaryContainer,
                             ),
                           ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.refresh_rounded),
+                          tooltip: 'Reset Positions',
+                          onPressed: _resetPositions,
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(4),
+                          color: Theme.of(context).colorScheme.primaryContainer,
                         ),
                       ],
                     ),
