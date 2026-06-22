@@ -89,7 +89,7 @@ class _MyFilesScreenState extends State<MyFilesScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? null : AppColors.surfaceContainerHigh,
+      backgroundColor: isDark ? null : AppColors.surfaceContainerLow,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
