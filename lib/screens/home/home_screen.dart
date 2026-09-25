@@ -216,7 +216,7 @@ class _HighlightToolCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: accent.withOpacity(0.35),
+                    color: accent.withValues(alpha: 0.35),
                     blurRadius: 10,
                     offset: const Offset(1, 3),
                   ),
@@ -255,7 +255,7 @@ class _HighlightToolCard extends StatelessWidget {
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: accent.withOpacity(0.7),
+              color: accent.withValues(alpha: 0.7),
               size: 22,
             ),
           ],
@@ -307,7 +307,7 @@ class _SmallToolCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: accent.withOpacity(isDark ? 0.22 : 0.12),
+                color: accent.withValues(alpha: isDark ? 0.22 : 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: accent, size: 24),

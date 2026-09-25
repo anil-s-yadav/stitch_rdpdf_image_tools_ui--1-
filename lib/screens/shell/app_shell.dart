@@ -73,7 +73,7 @@ class _AppShellState extends State<AppShell> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).shadowColor.withOpacity(0.05),
+              color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -135,7 +135,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: isActive
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -149,7 +149,7 @@ class _NavItem extends StatelessWidget {
                   ? Theme.of(context).colorScheme.primary
                   : Theme.of(
                       context,
-                    ).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
             const SizedBox(height: 2),
             Text(
@@ -161,7 +161,7 @@ class _NavItem extends StatelessWidget {
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(
                         context,
-                      ).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
               ),
             ),
           ],

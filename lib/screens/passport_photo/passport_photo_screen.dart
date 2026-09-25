@@ -51,7 +51,7 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
     setState(() => _isProcessing = true);
 
     final preset = PhotoPreset.presets[_selectedPresetIndex];
-    
+
     ResizeFitType fitType = ResizeFitType.fitBackground;
     Color bgColor = Colors.white;
     if (_bgIndex == 1) {
@@ -266,17 +266,26 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
                     ),
                     const SizedBox(height: AppTheme.spaceSm),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusDefault),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.radiusDefault,
+                        ),
                       ),
                       child: Row(
                         children: [
                           Icon(
                             Icons.palette_rounded,
                             size: 20,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -303,7 +312,9 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                       color: _bgIndex == 0
-                                          ? Theme.of(context).colorScheme.primaryContainer
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primaryContainer
                                           : Colors.grey.shade300,
                                       width: _bgIndex == 0 ? 2 : 1,
                                     ),
@@ -312,7 +323,9 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
                                       ? Icon(
                                           Icons.check,
                                           size: 16,
-                                          color: Theme.of(context).colorScheme.primaryContainer,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primaryContainer,
                                         )
                                       : null,
                                 ),
@@ -328,7 +341,9 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                       color: _bgIndex == 1
-                                          ? Theme.of(context).colorScheme.primaryContainer
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primaryContainer
                                           : Colors.transparent,
                                       width: _bgIndex == 1 ? 2 : 0,
                                     ),
@@ -350,12 +365,17 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
                                   height: 32,
                                   decoration: BoxDecoration(
                                     color: _bgIndex == 2
-                                        ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
-                                        : Theme.of(context).colorScheme.surfaceContainerHigh,
+                                        ? Theme.of(context).colorScheme.primary
+                                              .withValues(alpha: 0.15)
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceContainerHigh,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                       color: _bgIndex == 2
-                                          ? Theme.of(context).colorScheme.primaryContainer
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primaryContainer
                                           : Colors.transparent,
                                       width: _bgIndex == 2 ? 2 : 0,
                                     ),
@@ -364,8 +384,12 @@ class _PassportPhotoScreenState extends State<PassportPhotoScreen> {
                                     Icons.fit_screen_rounded,
                                     size: 16,
                                     color: _bgIndex == 2
-                                        ? Theme.of(context).colorScheme.primaryContainer
-                                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.primaryContainer
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -443,7 +467,9 @@ class _PresetCard extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+                : Theme.of(
+                    context,
+                  ).colorScheme.outlineVariant.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
@@ -451,7 +477,7 @@ class _PresetCard extends StatelessWidget {
                   BoxShadow(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primaryContainer.withOpacity(0.1),
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.1),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -559,7 +585,9 @@ class _SettingRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

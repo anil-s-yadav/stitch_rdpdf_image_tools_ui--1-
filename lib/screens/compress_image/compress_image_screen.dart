@@ -217,7 +217,9 @@ class _CompressImageScreenState extends State<CompressImageScreen> {
                             boxShadow: _compressModeIndex == 0
                                 ? [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -258,7 +260,9 @@ class _CompressImageScreenState extends State<CompressImageScreen> {
                             boxShadow: _compressModeIndex == 1
                                 ? [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -416,7 +420,7 @@ class _CompressImageScreenState extends State<CompressImageScreen> {
                             decoration: BoxDecoration(
                               color: Theme.of(
                                 context,
-                              ).colorScheme.primary.withOpacity(0.15),
+                              ).colorScheme.primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(

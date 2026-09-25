@@ -225,7 +225,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                       hintStyle: TextStyle(
                         color: Theme.of(
                           context,
-                        ).colorScheme.outline.withOpacity(0.6),
+                        ).colorScheme.outline.withValues(alpha: 0.6),
                       ),
                       suffixText: '.pdf',
                       suffixStyle: TextStyle(

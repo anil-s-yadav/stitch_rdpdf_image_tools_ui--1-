@@ -252,12 +252,12 @@ class _ResizeImageScreenState extends State<ResizeImageScreen> {
           duration: const Duration(milliseconds: 200),
           height: 48,
           decoration: BoxDecoration(
-            color: isSelected ? cs.primary.withOpacity(0.15) : cs.surface,
+            color: isSelected ? cs.primary.withValues(alpha: 0.15) : cs.surface,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(
               color: isSelected
                   ? cs.primary
-                  : cs.outlineVariant.withOpacity(0.5),
+                  : cs.outlineVariant.withValues(alpha: 0.5),
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -304,11 +304,13 @@ class _ResizeImageScreenState extends State<ResizeImageScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? cs.primary.withOpacity(0.1)
+              ? cs.primary.withValues(alpha: 0.1)
               : cs.surfaceContainerLow,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? cs.primary : cs.outlineVariant.withOpacity(0.3),
+            color: isSelected
+                ? cs.primary
+                : cs.outlineVariant.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -402,7 +404,9 @@ class _ResizeImageScreenState extends State<ResizeImageScreen> {
                             boxShadow: _resizeModeIndex == 0
                                 ? [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -446,7 +450,9 @@ class _ResizeImageScreenState extends State<ResizeImageScreen> {
                             boxShadow: _resizeModeIndex == 1
                                 ? [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -613,14 +619,15 @@ class _ResizeImageScreenState extends State<ResizeImageScreen> {
                             decoration: BoxDecoration(
                               color: Theme.of(
                                 context,
-                              ).colorScheme.primary.withOpacity(0.05),
+                              ).colorScheme.primary.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(
                                 AppTheme.radiusDefault,
                               ),
                               border: Border.all(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primaryContainer.withOpacity(0.2),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer
+                                    .withValues(alpha: 0.2),
                               ),
                             ),
                             child: Column(

@@ -24,20 +24,20 @@ class AppTheme {
 
   // ── Elevation / shadow tokens ────────────────────────────────────────
   static List<BoxShadow> get cardShadow => [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 20,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 20,
+      offset: const Offset(0, 4),
+    ),
+  ];
 
   static List<BoxShadow> get elevatedShadow => [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.08),
-          blurRadius: 30,
-          offset: const Offset(0, 10),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.08),
+      blurRadius: 30,
+      offset: const Offset(0, 10),
+    ),
+  ];
 
   // ── Text theme using Inter ───────────────────────────────────────────
   static TextTheme get _textTheme {
@@ -147,7 +147,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 1,
         centerTitle: true,
-        backgroundColor: Colors.white.withOpacity(0.8),
+        backgroundColor: Colors.white.withValues(alpha: 0.8),
         foregroundColor: AppColors.primaryContainer,
         titleTextStyle: GoogleFonts.inter(
           fontSize: 20,
@@ -168,7 +168,7 @@ class AppTheme {
           backgroundColor: AppColors.primaryContainer,
           foregroundColor: AppColors.onPrimary,
           elevation: 2,
-          shadowColor: AppColors.primaryContainer.withOpacity(0.3),
+          shadowColor: AppColors.primaryContainer.withValues(alpha: 0.3),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusMd),
           ),
@@ -224,7 +224,7 @@ class AppTheme {
         activeTrackColor: AppColors.primaryContainer,
         inactiveTrackColor: AppColors.surfaceContainerHighest,
         thumbColor: AppColors.primaryContainer,
-        overlayColor: AppColors.primaryContainer.withOpacity(0.12),
+        overlayColor: AppColors.primaryContainer.withValues(alpha: 0.12),
         trackHeight: 4,
       ),
       chipTheme: ChipThemeData(
@@ -287,7 +287,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 1,
         centerTitle: true,
-        backgroundColor: AppColors.darkSurface.withOpacity(0.8),
+        backgroundColor: AppColors.darkSurface.withValues(alpha: 0.8),
         foregroundColor: AppColors.inversePrimary,
         titleTextStyle: GoogleFonts.inter(
           fontSize: 20,
@@ -308,7 +308,7 @@ class AppTheme {
           backgroundColor: AppColors.primaryContainer,
           foregroundColor: AppColors.onPrimary,
           elevation: 2,
-          shadowColor: AppColors.primaryContainer.withOpacity(0.3),
+          shadowColor: AppColors.primaryContainer.withValues(alpha: 0.3),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusMd),
           ),
@@ -356,7 +356,7 @@ class AppTheme {
         activeTrackColor: AppColors.primaryContainer,
         inactiveTrackColor: AppColors.darkSurfaceContainerHigh,
         thumbColor: AppColors.primaryContainer,
-        overlayColor: AppColors.primaryContainer.withOpacity(0.12),
+        overlayColor: AppColors.primaryContainer.withValues(alpha: 0.12),
         trackHeight: 4,
       ),
       dividerTheme: const DividerThemeData(

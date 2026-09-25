@@ -226,8 +226,8 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
                       color: file != null
                           ? Theme.of(
                               context,
-                            ).colorScheme.primary.withOpacity(0.5)
-                          : Colors.grey.withOpacity(0.5),
+                            ).colorScheme.primary.withValues(alpha: 0.5)
+                          : Colors.grey.withValues(alpha: 0.5),
                       width: 1 / state.scale.clamp(0.1, 10.0),
                     ),
             ),
@@ -271,7 +271,7 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
                 decoration: BoxDecoration(
                   color: Theme.of(
                     context,
-                  ).colorScheme.primary.withOpacity(0.15),
+                  ).colorScheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -358,7 +358,7 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
                           decoration: BoxDecoration(
                             color: Theme.of(
                               context,
-                            ).colorScheme.primary.withOpacity(0.15),
+                            ).colorScheme.primary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -414,7 +414,7 @@ class _CombineToolScreenState extends State<CombineToolScreen> {
                               BoxShadow(
                                 color: Theme.of(
                                   context,
-                                ).shadowColor.withOpacity(0.05),
+                                ).shadowColor.withValues(alpha: 0.05),
                                 blurRadius: 10,
                               ),
                             ],

@@ -34,7 +34,7 @@ class PrimaryActionButton extends StatelessWidget {
               BoxShadow(
                 color: Theme.of(
                   context,
-                ).colorScheme.primaryContainer.withOpacity(0.3),
+                ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -110,7 +110,7 @@ class UploadArea extends StatelessWidget {
             border: Border.all(
               color: Theme.of(
                 context,
-              ).colorScheme.outlineVariant.withOpacity(0.5),
+              ).colorScheme.outlineVariant.withValues(alpha: 0.5),
             ),
           ),
           clipBehavior: Clip.antiAlias,
@@ -129,12 +129,12 @@ class UploadArea extends StatelessWidget {
           border: Border.all(
             color: Theme.of(
               context,
-            ).colorScheme.outlineVariant.withOpacity(0.5),
+            ).colorScheme.outlineVariant.withValues(alpha: 0.5),
             style: BorderStyle.solid,
           ),
           color: Theme.of(
             context,
-          ).colorScheme.surfaceContainerLow.withOpacity(0.5),
+          ).colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
         ),
         child: CustomPaint(
           painter: _DashedBorderPainter(
@@ -150,7 +150,7 @@ class UploadArea extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Theme.of(
                     context,
-                  ).colorScheme.primaryContainer.withOpacity(0.1),
+                  ).colorScheme.primaryContainer.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -228,19 +228,21 @@ class PresetChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
               : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border: Border.all(
             color: isSelected
                 ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                : Theme.of(
+                    context,
+                  ).colorScheme.outlineVariant.withValues(alpha: 0.5),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             if (!isSelected)
               BoxShadow(
-                color: Theme.of(context).shadowColor.withOpacity(0.03),
+                color: Theme.of(context).shadowColor.withValues(alpha: 0.03),
                 blurRadius: 4,
                 offset: const Offset(0, 1),
               ),
@@ -271,7 +273,7 @@ class PresetChip extends StatelessWidget {
                       color: isSelected
                           ? Theme.of(
                               context,
-                            ).colorScheme.primary.withOpacity(0.7)
+                            ).colorScheme.primary.withValues(alpha: 0.7)
                           : Theme.of(context).colorScheme.outline,
                     ),
                   ),
@@ -372,13 +374,13 @@ class FormatPicker extends StatelessWidget {
                     height: 44,
                     decoration: BoxDecoration(
                       color: selected == fmt
-                          ? cs.primary.withOpacity(0.15)
+                          ? cs.primary.withValues(alpha: 0.15)
                           : cs.surface,
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       border: Border.all(
                         color: selected == fmt
                             ? cs.primary
-                            : cs.outlineVariant.withOpacity(0.5),
+                            : cs.outlineVariant.withValues(alpha: 0.5),
                         width: selected == fmt ? 2 : 1,
                       ),
                     ),
@@ -396,8 +398,7 @@ class FormatPicker extends StatelessWidget {
                   ),
                 ),
               ),
-              if (fmt != OutputFormat.values.last)
-                const SizedBox(width: 8),
+              if (fmt != OutputFormat.values.last) const SizedBox(width: 8),
             ],
           ],
         ),
@@ -450,9 +451,12 @@ class _ImageComparisonSliderState extends State<ImageComparisonSlider> {
           final width = constraints.maxWidth;
           return GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onPanStart: (details) => _updatePosition(details.globalPosition, width),
-            onPanUpdate: (details) => _updatePosition(details.globalPosition, width),
-            onTapDown: (details) => _updatePosition(details.globalPosition, width),
+            onPanStart: (details) =>
+                _updatePosition(details.globalPosition, width),
+            onPanUpdate: (details) =>
+                _updatePosition(details.globalPosition, width),
+            onTapDown: (details) =>
+                _updatePosition(details.globalPosition, width),
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -477,9 +481,12 @@ class _ImageComparisonSliderState extends State<ImageComparisonSlider> {
                   top: 8,
                   left: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -500,12 +507,14 @@ class _ImageComparisonSliderState extends State<ImageComparisonSlider> {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primaryContainer
-                          .withOpacity(0.9),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -526,10 +535,7 @@ class _ImageComparisonSliderState extends State<ImageComparisonSlider> {
                   left: width * _sliderPosition - 1,
                   top: 0,
                   bottom: 0,
-                  child: Container(
-                    width: 2,
-                    color: Colors.white,
-                  ),
+                  child: Container(width: 2, color: Colors.white),
                 ),
 
                 // 6. Handle circle with chevrons
@@ -544,7 +550,9 @@ class _ImageComparisonSliderState extends State<ImageComparisonSlider> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).shadowColor.withOpacity(0.15),
+                          color: Theme.of(
+                            context,
+                          ).shadowColor.withValues(alpha: 0.15),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),

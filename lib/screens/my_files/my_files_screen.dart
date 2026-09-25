@@ -133,7 +133,9 @@ class _MyFilesScreenState extends State<MyFilesScreen>
                     : cs.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: cs.outlineVariant.withOpacity(isDark ? 0.3 : 0.5),
+                  color: cs.outlineVariant.withValues(
+                    alpha: isDark ? 0.3 : 0.5,
+                  ),
                 ),
               ),
               padding: const EdgeInsets.all(4),
@@ -260,7 +262,7 @@ class _FileCard extends StatelessWidget {
         color: isDark ? cs.surfaceContainerLow : cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: cs.outlineVariant.withOpacity(isDark ? 0.3 : 0.5),
+          color: cs.outlineVariant.withValues(alpha: isDark ? 0.3 : 0.5),
         ),
       ),
       child: Material(
@@ -278,7 +280,7 @@ class _FileCard extends StatelessWidget {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: catColor.withOpacity(isDark ? 0.15 : 0.1),
+                    color: catColor.withValues(alpha: isDark ? 0.15 : 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   clipBehavior: Clip.antiAlias,
@@ -327,7 +329,7 @@ class _FileCard extends StatelessWidget {
                             '•',
                             style: TextStyle(
                               fontSize: 12,
-                              color: cs.onSurfaceVariant.withOpacity(0.4),
+                              color: cs.onSurfaceVariant.withValues(alpha: 0.4),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -348,17 +350,17 @@ class _FileCard extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 11,
-                            color: cs.onSurfaceVariant.withOpacity(0.6),
+                            color: cs.onSurfaceVariant.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
                     ],
                   ),
-                ),                // Actions
+                ), // Actions
                 PopupMenuButton<String>(
                   icon: Icon(
                     Icons.more_vert_rounded,
-                    color: cs.onSurfaceVariant.withOpacity(0.6),
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.6),
                     size: 20,
                   ),
                   shape: RoundedRectangleBorder(
@@ -427,7 +429,7 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -504,7 +506,7 @@ class _EmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: cs.primary.withOpacity(0.08),
+                color: cs.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(_icon, size: 32, color: cs.primary),

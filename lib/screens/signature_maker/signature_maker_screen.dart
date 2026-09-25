@@ -218,7 +218,7 @@ class _SignatureMakerScreenState extends State<SignatureMakerScreen> {
                         border: Border.all(
                           color: Theme.of(
                             context,
-                          ).colorScheme.outlineVariant.withOpacity(0.3),
+                          ).colorScheme.outlineVariant.withValues(alpha: 0.3),
                         ),
                       ),
                       clipBehavior: Clip.antiAlias,
@@ -365,7 +365,7 @@ class _ToolButton extends StatelessWidget {
           border: Border.all(
             color: Theme.of(
               context,
-            ).colorScheme.outlineVariant.withOpacity(0.3),
+            ).colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
         ),
         child: Column(
@@ -425,13 +425,15 @@ class _CustomKBChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
               : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border: Border.all(
             color: isSelected
                 ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                : Theme.of(
+                    context,
+                  ).colorScheme.outlineVariant.withValues(alpha: 0.5),
             width: isSelected ? 2 : 1,
           ),
         ),

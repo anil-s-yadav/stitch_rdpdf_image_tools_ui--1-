@@ -97,7 +97,7 @@ class SettingsScreen extends StatelessWidget {
                     BoxShadow(
                       color: Theme.of(
                         context,
-                      ).colorScheme.primaryContainer.withOpacity(0.35),
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.35),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -114,7 +114,7 @@ class SettingsScreen extends StatelessWidget {
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.08),
+                          color: Colors.white.withValues(alpha: 0.08),
                         ),
                       ),
                     ),
@@ -126,7 +126,7 @@ class SettingsScreen extends StatelessWidget {
                         height: 70,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.06),
+                          color: Colors.white.withValues(alpha: 0.06),
                         ),
                       ),
                     ),
@@ -150,7 +150,7 @@ class SettingsScreen extends StatelessWidget {
                                     Shadow(
                                       color: const Color(
                                         0xFFFBBF24,
-                                      ).withOpacity(0.4),
+                                      ).withValues(alpha: 0.4),
                                       blurRadius: 8,
                                     ),
                                   ],
@@ -176,7 +176,7 @@ class SettingsScreen extends StatelessWidget {
                               fontFamily: 'Inter',
                               fontSize: 13,
                               fontWeight: FontWeight.w300,
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withValues(alpha: 0.85),
                               height: 1.5,
                             ),
                           ),
@@ -194,7 +194,9 @@ class SettingsScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.1,
+                                      ),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -351,17 +353,17 @@ class _OtherAppCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: gradientColors.first.withOpacity(0.10),
+            color: gradientColors.first.withValues(alpha: 0.10),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.04),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(color: gradientColors.first.withOpacity(0.12)),
+        border: Border.all(color: gradientColors.first.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,7 +381,7 @@ class _OtherAppCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: gradientColors.first.withOpacity(0.3),
+                  color: gradientColors.first.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -453,7 +455,7 @@ class _OtherAppCard extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: gradientColors.first.withOpacity(0.1),
+                  color: gradientColors.first.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -504,7 +506,7 @@ class _SettingTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(

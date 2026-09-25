@@ -161,7 +161,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: cs.primaryContainer.withOpacity(0.3),
+                      color: cs.primaryContainer.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 6),
                     ),
@@ -196,7 +196,7 @@ class _ResultScreenState extends State<ResultScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.12),
+                          color: AppColors.success.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -221,69 +221,69 @@ class _ResultScreenState extends State<ResultScreen> {
                         ),
                       )
                     : _saveFailed
-                        ? GestureDetector(
-                            onTap: _autoSave,
-                            child: Container(
-                              key: const ValueKey('failed'),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: cs.error.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.error_rounded,
-                                    color: cs.error,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Save failed — tap to retry',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: cs.error,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : Container(
-                            key: const ValueKey('saving'),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: cs.primary,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Saving…',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 13,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
+                    ? GestureDetector(
+                        onTap: _autoSave,
+                        child: Container(
+                          key: const ValueKey('failed'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
+                          decoration: BoxDecoration(
+                            color: cs.error.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.error_rounded,
+                                color: cs.error,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Save failed — tap to retry',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: cs.error,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : Container(
+                        key: const ValueKey('saving'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: cs.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Saving…',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
               ),
               const SizedBox(height: AppTheme.spaceLg),
 
@@ -373,7 +373,7 @@ class _ResultScreenState extends State<ResultScreen> {
                           AppTheme.radiusDefault,
                         ),
                         border: Border.all(
-                          color: cs.outlineVariant.withOpacity(0.2),
+                          color: cs.outlineVariant.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Row(
@@ -505,7 +505,7 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppTheme.radiusDefault),
-        border: Border.all(color: cs.outlineVariant.withOpacity(0.2)),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
